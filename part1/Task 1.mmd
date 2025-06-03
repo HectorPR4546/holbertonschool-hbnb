@@ -1,24 +1,24 @@
-%% Diagram type
+%% Business Logic Layer Class Diagram
+
 classDiagram
 
-%% Class Definitions and Explanations
-
-%% User: Represents a registered account. Can create Places and write Reviews.
+%% ───── User Entity ─────
 class User {
     +UUID id
     +String first_name
     +String last_name
     +String email
-    +String password  %% should be securely hashed
+    +String password      %% should be hashed
     +Date created_at
-    +List~Review~ reviews  %% all reviews authored by the user
-    +List~Place~ places  %% all places owned by the user
-    +register()  %% creates a new user with validation
-    +login()  %% authenticates using credentials
-    +updateProfile()  %% modifies user info
+    +List~Review~ reviews %% user's reviews
+    +List~Place~ places   %% user's places
+    +register()
+    +login()
+    +updateProfile()
 }
+%% Represents system users who can list places and write reviews.
 
-%% Place: Represents a property listed by a User.
+%% ───── Place Entity ─────
 class Place {
     +UUID id
     +String name
@@ -26,44 +26,46 @@ class Place {
     +String address
     +Integer prices
     +Float price_per_night
-    +UUID owner_id  %% links to User.id
+    +UUID owner_id
     +Date created_at
     +Date updated_at
-    +List~Review~ reviews  %% feedback left by users
-    +List~Amenity~ amenities  %% available features at the place
-    +addReview()  %% links a new review to the place
-    +updateDetails()  %% allows changes to place info
-    +calculateAverageRating()  %% computes avg from reviews
+    +List~Review~ reviews
+    +List~Amenity~ amenities
+    +addReview()
+    +updateDetails()
+    +calculateAverageRating()
 }
+%% Represents rental properties owned by users.
 
-%% Review: Feedback left by a User on a Place.
+%% ───── Review Entity ─────
 class Review {
     +UUID id
     +UUID user_id
     +UUID place_id
     +String text
-    +Integer rating  %% e.g., 1 to 5 stars
+    +Integer rating
     +Date created_at
     +Date updated_at
-    +editReview()  %% allows modifying the content
-    +deleteReview()  %% marks as removed or deletes
+    +editReview()
+    +deleteReview()
 }
+%% Represents feedback left by users on places.
 
-%% Amenity: Describes optional features at a Place.
+%% ───── Amenity Entity ─────
 class Amenity {
     +UUID id
     +String name
     +Date created_at
     +Date updated_at
-    +List~Place~ places  %% places where amenity is used
-    +updateAmenity()  %% change the amenity info
+    +List~Place~ places
+    +updateAmenity()
 }
+%% Represents features like Wi-Fi, Pool, etc., linked to Places.
 
-%% Relationships and Cardinality
-
-User "1" --> "0..*" Place : Owns
-User "1" --> "0..*" Review : Writes
-Place "1" --> "0..*" Review : Has
-Review "*" --> "1" User : Belongs to
-Place "*" --> "*" Amenity : Includes
-Amenity "*" --> "*" Place : Used in
+%% ───── Relationships ─────
+User      "1" --> "0..*" Place     : Owns
+User      "1" --> "0..*" Review    : Writes
+Place     "1" --> "0..*" Review    : Has
+Review    "*" --> "1"   User       : Belongs to
+Place     "*" --> "*"   Amenity    : Includes
+Amenity   "*" --> "*"   Place      : Used in
