@@ -1,0 +1,27 @@
+%% Sequence Diagram – Review Creation Flow For Task 2_3
+
+sequenceDiagram
+
+    %% Participants
+    participant User
+    participant API as Presentation Layer (API)
+    participant BusinessLogic as Business Logic Layer (Review Model)
+    participant Database as Persistence Layer (Database)
+
+    %% API Request Flow
+    User->>API: POST /reviews\n{place_id, rating, comment}
+    API->>BusinessLogic: validateReview(place_id, rating)
+    BusinessLogic-->>API: Validation Success
+
+    %% Business Logic Delegation
+    API->>BusinessLogic: createReview(user_id, place_id, rating, comment)
+    BusinessLogic->>Database: INSERT INTO reviews\n(user_id, place_id, rating, comment, created_at)
+    Database-->>BusinessLogic: Review Saved
+
+    %% Update Related Data
+    BusinessLogic->>Database: UPDATE places SET avg_rating = new_avg\nWHERE id = place_id
+    Database-->>BusinessLogic: Rating Updated
+
+    %% Return Flow
+    BusinessLogic-->>API: Return Success Response
+    API-->>User: 201 Created\n{review_id, rating, comment}
