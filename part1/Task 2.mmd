@@ -2,22 +2,39 @@
 
 sequenceDiagram
 
-    %% Participants
+    %% Participants involved in the flow
     participant User
     participant API as Presentation Layer (API)
     participant BusinessLogic as Business Logic Layer (Place Model)
     participant Database as Persistence Layer (Database)
 
-    %% API Request Flow
+    %% Step 1: User submits data to create a new Place
+    %% Input includes fields required by the business rules
     User->>API: POST /places\n{name, location, price, amenities}
+
+    %% Step 2: API passes data to the business logic layer for validation
+    %% Ensures data integrity before proceeding with creation
     API->>BusinessLogic: validatePlaceData(name, location, price)
+
+    %% Step 3: Business logic confirms data is valid
+    %% If validation fails, this flow stops and error is returned (not shown here)
     BusinessLogic-->>API: Validation Success
 
-    %% Business Logic Delegation
+    %% Step 4: API calls logic layer to create the Place
+    %% User ID is passed to associate the Place with its owner
     API->>BusinessLogic: createPlace(user_id, name, location, price, amenities)
+
+    %% Step 5: Business logic inserts the Place into the database
+    %% Timestamp is recorded for auditing
     BusinessLogic->>Database: INSERT INTO places\n(name, location, price, user_id, created_at)
+
+    %% Step 6: DB confirms the new Place record has been created
     Database-->>BusinessLogic: Place Created
 
-    %% Return Flow
+    %% Step 7: Business logic prepares and sends response to API
+    %% This can include the new place ID and other metadata
     BusinessLogic-->>API: Return Success Response
+
+    %% Step 8: API returns the result to the user
+    %% Response follows REST convention with HTTP 201 and basic place info
     API-->>User: 201 Created\n{place_id, name, location, price}
