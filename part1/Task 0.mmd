@@ -1,16 +1,16 @@
-%%This is a Diagram example for Task 0
+%% This is a Diagram example for Task 0
+%% High-level Class Diagram showing layered architecture and Facade pattern usage
 
-%%Diagram type
-
+%% Diagram type
 classDiagram
 
-%%Nodes and Contents
-
+%% Presentation Layer: Handles incoming requests, exposes a simplified interface (the "facade") for clients
 class PresentationLayer {
     <<Interface>>
     +ServiceAPI
     +handleRequest ()
 }
+%% Business Logic Layer: Core of the application logic; coordinates models and rules
 class BusinessLogicLayer {
     +User
     +Place
@@ -18,12 +18,15 @@ class BusinessLogicLayer {
     +Amenity
     +processRequest()
 }
+%% Persistence Layer: Responsible for interacting with the data store (e.g. database, files)
 class PersistenceLayer {
     +DatabaseAccess
     +executeQuery()
 }
 
-%%Element Display order and line labels
-
+%% Relationships
+%% Facade Pattern: PresentationLayer acts as a facade that hides complexity of BusinessLogicLayer
 PresentationLayer --> BusinessLogicLayer : Facade Pattern
+
+%% BusinessLogicLayer delegates data tasks to PersistenceLayer
 BusinessLogicLayer --> PersistenceLayer : Database Operations
