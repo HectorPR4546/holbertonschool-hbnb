@@ -1,0 +1,69 @@
+%% Diagram type
+classDiagram
+
+%% Class Definitions and Explanations
+
+%% User: Represents a registered account. Can create Places and write Reviews.
+class User {
+    +UUID id
+    +String first_name
+    +String last_name
+    +String email
+    +String password  %% should be securely hashed
+    +Date created_at
+    +List~Review~ reviews  %% all reviews authored by the user
+    +List~Place~ places  %% all places owned by the user
+    +register()  %% creates a new user with validation
+    +login()  %% authenticates using credentials
+    +updateProfile()  %% modifies user info
+}
+
+%% Place: Represents a property listed by a User.
+class Place {
+    +UUID id
+    +String name
+    +String description
+    +String address
+    +Integer prices
+    +Float price_per_night
+    +UUID owner_id  %% links to User.id
+    +Date created_at
+    +Date updated_at
+    +List~Review~ reviews  %% feedback left by users
+    +List~Amenity~ amenities  %% available features at the place
+    +addReview()  %% links a new review to the place
+    +updateDetails()  %% allows changes to place info
+    +calculateAverageRating()  %% computes avg from reviews
+}
+
+%% Review: Feedback left by a User on a Place.
+class Review {
+    +UUID id
+    +UUID user_id
+    +UUID place_id
+    +String text
+    +Integer rating  %% e.g., 1 to 5 stars
+    +Date created_at
+    +Date updated_at
+    +editReview()  %% allows modifying the content
+    +deleteReview()  %% marks as removed or deletes
+}
+
+%% Amenity: Describes optional features at a Place.
+class Amenity {
+    +UUID id
+    +String name
+    +Date created_at
+    +Date updated_at
+    +List~Place~ places  %% places where amenity is used
+    +updateAmenity()  %% change the amenity info
+}
+
+%% Relationships and Cardinality
+
+User "1" --> "0..*" Place : Owns
+User "1" --> "0..*" Review : Writes
+Place "1" --> "0..*" Review : Has
+Review "*" --> "1" User : Belongs to
+Place "*" --> "*" Amenity : Includes
+Amenity "*" --> "*" Place : Used in
