@@ -1,0 +1,24 @@
+%% Sequence Diagram – Place Search Flow For Task 2_4
+
+sequenceDiagram
+
+    %% Participants
+    participant User
+    participant API as Presentation Layer (API)
+    participant BusinessLogic as Business Logic Layer (Place Model)
+    participant Database as Persistence Layer (Database)
+
+    %% User Request
+    User->>API: GET /places?location=NYC&max_price=100
+    %% API forwards filter request to business logic
+    API->>BusinessLogic: fetchFilteredPlaces(location, max_price)
+
+    %% Business logic queries filtered places
+    BusinessLogic->>Database: SELECT * FROM places\nWHERE location='NYC' AND price <= 100
+    Database-->>BusinessLogic: Return Matching Places
+
+    %% Business logic returns filtered data
+    BusinessLogic-->>API: Return Place Data
+
+    %% API responds with results
+    API-->>User: 200 OK\n{list of places}
