@@ -1,0 +1,23 @@
+%% Sequence Diagram – User Registration Flow For Task 2
+
+sequenceDiagram
+
+    %% Participants
+    participant User
+    participant API as Presentation Layer (API)
+    participant BusinessLogic as Business Logic Layer (User Model)
+    participant Database as Persistence Layer (Database)
+
+    %% API Request Flow
+    User->>API: POST /register\n{name, email, password}
+    API->>BusinessLogic: validateUserData(name, email, password)
+    BusinessLogic-->>API: Validation Success
+
+    %% Business Logic Delegation
+    API->>BusinessLogic: createUser(name, email, hashed_password)
+    BusinessLogic->>Database: INSERT INTO users\n(name, email, password, created_at)
+    Database-->>BusinessLogic: User Created
+
+    %% Return Flow
+    BusinessLogic-->>API: Return Success Response
+    API-->>User: 201 Created\n{user_id, name, email}
