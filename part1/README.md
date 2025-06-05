@@ -64,6 +64,6 @@ You can preview these `.mmd` Mermaid diagrams:
 ## Author
 
 **Hector Perez Velez**  
-[@HectorPR4546](https://github.com/HectorPR4546)  
+[HectorPR4546](https://github.com/HectorPR4546)  
 Holberton School – Ponce, Puerto Rico  
 June 2025
