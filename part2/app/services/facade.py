@@ -2,6 +2,7 @@ from datetime import datetime
 from app.models.user import User
 from app.persistence.repository import InMemoryRepository
 from app.models.amenity import Amenity
+from app.models.place import Place
 
 class HBnBFacade:
     """Facade pattern implementation for HBnB services"""
@@ -89,3 +90,51 @@ class HBnBFacade:
             amenity.update(amenity_data)
             return amenity
         return None
+
+    def create_place(self, place_data):
+        """Create a new place with validation"""
+        try:
+            place = Place(
+                title=place_data['title'],
+                description=place_data.get('description', ''),
+                price=place_data['price'],
+                latitude=place_data['latitude'],
+                longitude=place_data['longitude'],
+                owner_id=place_data['owner_id']
+            )
+            self.place_repo.add(place)
+            return place
+        except ValueError as e:
+            raise ValueError(f"Invalid place data: {str(e)}")
+
+    def get_place(self, place_id):
+        """Get place by ID with owner details"""
+        place = self.place_repo.get(place_id)
+        if place:
+            place.owner = self.user_repo.get(place.owner_id)
+            place.amenities = [self.amenity_repo.get(aid) for aid in place.amenity_ids]
+        return place
+
+    def get_all_places(self):
+        """Get all places with basic info"""
+        return self.place_repo.get_all()
+
+    def update_place(self, place_id, place_data):
+        """Update place information"""
+        place = self.place_repo.get(place_id)
+        if place:
+            try:
+                place.update(place_data)
+                return place
+            except ValueError as e:
+                raise ValueError(f"Invalid update data: {str(e)}")
+        return None
+
+    def add_amenity_to_place(self, place_id, amenity_id):
+        """Add amenity to a place"""
+        place = self.place_repo.get(place_id)
+        amenity = self.amenity_repo.get(amenity_id)
+        if place and amenity and amenity_id not in place.amenity_ids:
+            place.amenity_ids.append(amenity_id)
+            return True
+        return False
