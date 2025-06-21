@@ -3,6 +3,7 @@ from app.models.user import User
 from app.persistence.repository import InMemoryRepository
 from app.models.amenity import Amenity
 from app.models.place import Place
+from app.models.review import Review
 
 class HBnBFacade:
     """Facade pattern implementation for HBnB services"""
@@ -136,5 +137,50 @@ class HBnBFacade:
         amenity = self.amenity_repo.get(amenity_id)
         if place and amenity and amenity_id not in place.amenity_ids:
             place.amenity_ids.append(amenity_id)
+            return True
+        return False
+
+    def create_review(self, review_data):
+        """Create a new review with validation"""
+        try:
+            review = Review(
+                text=review_data['text'],
+                rating=review_data['rating'],
+                user_id=review_data['user_id'],
+                place_id=review_data['place_id']
+            )
+            self.review_repo.add(review)
+            return review
+        except ValueError as e:
+            raise ValueError(f"Invalid review data: {str(e)}")
+
+    def get_review(self, review_id):
+        """Get review by ID"""
+        return self.review_repo.get(review_id)
+
+    def get_all_reviews(self):
+        """Get all reviews"""
+        return self.review_repo.get_all()
+
+    def get_reviews_by_place(self, place_id):
+        """Get all reviews for a place"""
+        return [r for r in self.review_repo.get_all() if r.place_id == place_id]
+
+    def update_review(self, review_id, review_data):
+        """Update review information"""
+        review = self.review_repo.get(review_id)
+        if review:
+            try:
+                review.update(review_data)
+                return review
+            except ValueError as e:
+                raise ValueError(f"Invalid update data: {str(e)}")
+        return None
+
+    def delete_review(self, review_id):
+        """Delete a review"""
+        review = self.review_repo.get(review_id)
+        if review:
+            self.review_repo.delete(review_id)
             return True
         return False
