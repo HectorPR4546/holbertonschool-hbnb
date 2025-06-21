@@ -1,6 +1,7 @@
 from datetime import datetime
 from app.models.user import User
 from app.persistence.repository import InMemoryRepository
+from app.models.amenity import Amenity
 
 class HBnBFacade:
     """Facade pattern implementation for HBnB services"""
@@ -66,3 +67,25 @@ class HBnBFacade:
             User: The user object or None if not found
         """
         return self.user_repo.get_by_attribute('email', email)
+
+    def create_amenity(self, amenity_data):
+        """Create a new amenity"""
+        amenity = Amenity(**amenity_data)
+        self.amenity_repo.add(amenity)
+        return amenity
+
+    def get_amenity(self, amenity_id):
+        """Get amenity by ID"""
+        return self.amenity_repo.get(amenity_id)
+
+    def get_all_amenities(self):
+        """Get all amenities"""
+        return self.amenity_repo.get_all()
+
+    def update_amenity(self, amenity_id, amenity_data):
+        """Update an amenity"""
+        amenity = self.amenity_repo.get(amenity_id)
+        if amenity:
+            amenity.update(amenity_data)
+            return amenity
+        return None
