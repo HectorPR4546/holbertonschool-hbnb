@@ -1,113 +1,86 @@
-"""API routes for HBnB."""
+# ... (previous imports remain the same)
+from models.amenity import Amenity
 
-from flask import Blueprint, jsonify, request
-from flask_restx import Api, Resource, fields
-from business_logic.facade import HBNBFacade
-from business_logic.services import HBNBService
-from models.user import User
+# ... (previous code remains the same until namespace creation)
 
-api_blueprint = Blueprint('api', __name__)
-api = Api(api_blueprint, version='1.0', title='HBnB API',
-          description='HBnB API endpoints')
+# Namespace for Amenity operations
+amenity_ns = api.namespace('amenities', description='Amenity operations')
 
-facade = HBNBFacade()
-service = HBNBService(facade)
-
-# Namespace for User operations
-user_ns = api.namespace('users', description='User operations')
-
-# Model for User request/response
-user_model = api.model('User', {
-    'email': fields.String(required=True, description='User email'),
-    'password': fields.String(required=True, description='User password'),
-    'first_name': fields.String(description='First name'),
-    'last_name': fields.String(description='Last name')
+# Model for Amenity request/response
+amenity_model = api.model('Amenity', {
+    'name': fields.String(required=True, description='Amenity name')
 })
 
-@user_ns.route('/')
-class UserList(Resource):
-    @user_ns.doc('list_users')
-    @user_ns.marshal_list_with(user_model, skip_none=True)
+@amenity_ns.route('/')
+class AmenityList(Resource):
+    @amenity_ns.doc('list_amenities')
+    @amenity_ns.marshal_list_with(amenity_model)
     def get(self):
-        """List all users (excluding passwords)."""
-        users = service.get_all_objects(User)
-        # Remove password from response
+        """List all amenities."""
+        amenities = service.get_all_objects(Amenity)
         return [{
-            'id': user.id,
-            'email': user.email,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'created_at': user.created_at.isoformat(),
-            'updated_at': user.updated_at.isoformat()
-        } for user in users.values()]
+            'id': amenity.id,
+            'name': amenity.name,
+            'created_at': amenity.created_at.isoformat(),
+            'updated_at': amenity.updated_at.isoformat()
+        } for amenity in amenities.values()]
 
-    @user_ns.doc('create_user')
-    @user_ns.expect(user_model)
-    @user_ns.marshal_with(user_model, code=201, skip_none=True)
+    @amenity_ns.doc('create_amenity')
+    @amenity_ns.expect(amenity_model)
+    @amenity_ns.marshal_with(amenity_model, code=201)
     def post(self):
-        """Create a new user."""
+        """Create a new amenity."""
         data = request.get_json()
         if not data:
             return {'message': 'No input data provided'}, 400
         
-        # Basic validation
-        if 'email' not in data or 'password' not in data:
-            return {'message': 'Missing email or password'}, 400
+        if 'name' not in data:
+            return {'message': 'Missing amenity name'}, 400
         
-        user = service.create_object(User, data)
+        amenity = service.create_object(Amenity, data)
         return {
-            'id': user.id,
-            'email': user.email,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'created_at': user.created_at.isoformat(),
-            'updated_at': user.updated_at.isoformat()
+            'id': amenity.id,
+            'name': amenity.name,
+            'created_at': amenity.created_at.isoformat(),
+            'updated_at': amenity.updated_at.isoformat()
         }, 201
 
-@user_ns.route('/<string:user_id>')
-@user_ns.response(404, 'User not found')
-@user_ns.param('user_id', 'The user identifier')
-class UserResource(Resource):
-    @user_ns.doc('get_user')
-    @user_ns.marshal_with(user_model, skip_none=True)
-    def get(self, user_id):
-        """Fetch a user given its identifier."""
-        user = service.get_object(User, user_id)
-        if not user:
-            return {'message': 'User not found'}, 404
+@amenity_ns.route('/<string:amenity_id>')
+@amenity_ns.response(404, 'Amenity not found')
+@amenity_ns.param('amenity_id', 'The amenity identifier')
+class AmenityResource(Resource):
+    @amenity_ns.doc('get_amenity')
+    @amenity_ns.marshal_with(amenity_model)
+    def get(self, amenity_id):
+        """Fetch an amenity given its identifier."""
+        amenity = service.get_object(Amenity, amenity_id)
+        if not amenity:
+            return {'message': 'Amenity not found'}, 404
         
         return {
-            'id': user.id,
-            'email': user.email,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'created_at': user.created_at.isoformat(),
-            'updated_at': user.updated_at.isoformat()
+            'id': amenity.id,
+            'name': amenity.name,
+            'created_at': amenity.created_at.isoformat(),
+            'updated_at': amenity.updated_at.isoformat()
         }
 
-    @user_ns.doc('update_user')
-    @user_ns.expect(user_model)
-    @user_ns.marshal_with(user_model, skip_none=True)
-    def put(self, user_id):
-        """Update a user given its identifier."""
-        user = service.get_object(User, user_id)
-        if not user:
-            return {'message': 'User not found'}, 404
+    @amenity_ns.doc('update_amenity')
+    @amenity_ns.expect(amenity_model)
+    @amenity_ns.marshal_with(amenity_model)
+    def put(self, amenity_id):
+        """Update an amenity given its identifier."""
+        amenity = service.get_object(Amenity, amenity_id)
+        if not amenity:
+            return {'message': 'Amenity not found'}, 404
         
         data = request.get_json()
         if not data:
             return {'message': 'No input data provided'}, 400
         
-        # Don't allow updating password via this endpoint
-        if 'password' in data:
-            del data['password']
-        
-        updated_user = service.update_object(User, user_id, data)
+        updated_amenity = service.update_object(Amenity, amenity_id, data)
         return {
-            'id': updated_user.id,
-            'email': updated_user.email,
-            'first_name': updated_user.first_name,
-            'last_name': updated_user.last_name,
-            'created_at': updated_user.created_at.isoformat(),
-            'updated_at': updated_user.updated_at.isoformat()
+            'id': updated_amenity.id,
+            'name': updated_amenity.name,
+            'created_at': updated_amenity.created_at.isoformat(),
+            'updated_at': updated_amenity.updated_at.isoformat()
         }
