@@ -2,12 +2,12 @@
 """Main application entry point for HBnB project."""
 
 from flask import Flask
-from presentation.api.routes import api_blueprint
+from presentation.api.routes import api
 
 def create_app():
     """Create and configure the Flask application."""
     app = Flask(__name__)
-    app.register_blueprint(api_blueprint)
+    api.init_app(app)
     
     return app
 
