@@ -16,6 +16,15 @@ user_model = api.model('PlaceUser', {
     'email': fields.String
 })
 
+# Add the review model for place responses
+review_model = api.model('PlaceReview', {
+    'id': fields.String,
+    'text': fields.String,
+    'rating': fields.Integer(min=1, max=5),
+    'user_id': fields.String,
+    'created_at': fields.DateTime
+})
+
 place_input_model = api.model('PlaceInput', {
     'title': fields.String(required=True),
     'description': fields.String,
@@ -34,7 +43,8 @@ place_response_model = api.model('PlaceResponse', {
     'latitude': fields.Float,
     'longitude': fields.Float,
     'owner': fields.Nested(user_model),
-    'amenities': fields.List(fields.Nested(amenity_model))
+    'amenities': fields.List(fields.Nested(amenity_model)),
+    'reviews': fields.List(fields.Nested(review_model))  # Added reviews field
 })
 
 @api.route('/')
@@ -65,6 +75,9 @@ class PlaceResource(Resource):
         place = facade.get_place(place_id)
         if not place:
             api.abort(404, 'Place not found')
+        
+        # Get reviews for this place
+        place.reviews = facade.get_reviews_by_place(place_id)
         return place, 200
 
     @api.expect(place_input_model)
