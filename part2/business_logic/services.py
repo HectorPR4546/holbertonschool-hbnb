@@ -1,6 +1,7 @@
 """Business logic services for HBnB."""
 
 from typing import Any, Dict, Type, TypeVar, Generic
+from datetime import datetime
 from models.base_model import BaseModel
 
 T = TypeVar('T', bound=BaseModel)
