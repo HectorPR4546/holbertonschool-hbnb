@@ -1,9 +1,9 @@
 from datetime import datetime
 from app.models.user import User
-from app.persistence.repository import InMemoryRepository
-from app.models.amenity import Amenity
 from app.models.place import Place
 from app.models.review import Review
+from app.models.amenity import Amenity
+from app.persistence.repository import InMemoryRepository
 
 class HBnBFacade:
     """Facade pattern implementation for HBnB services"""
@@ -14,94 +14,64 @@ class HBnBFacade:
         self.review_repo = InMemoryRepository()
         self.amenity_repo = InMemoryRepository()
 
+    # User Methods
     def create_user(self, user_data):
-        """Create a new user
-        Args:
-            user_data (dict): Dictionary containing user attributes
-        Returns:
-            User: The created user object
-        """
-        # Set default values if not provided
-        user_data.setdefault('is_admin', False)
-        user_data.setdefault('created_at', datetime.now())
-        user_data.setdefault('updated_at', datetime.now())
+        """Create a new user with validation"""
+        # Remove any auto-generated fields that might come from API
+        user_data.pop('id', None)
+        user_data.pop('created_at', None)
+        user_data.pop('updated_at', None)
         
-        user = User(**user_data)
-        self.user_repo.add(user)
-        return user
+        try:
+            user = User(
+                first_name=user_data['first_name'],
+                last_name=user_data['last_name'],
+                email=user_data['email'],
+                is_admin=user_data.get('is_admin', False)
+            )
+            self.user_repo.add(user)
+            return user
+        except ValueError as e:
+            raise ValueError(f"Invalid user data: {str(e)}")
 
     def get_user(self, user_id):
-        """Get a user by ID
-        Args:
-            user_id (str): The user's UUID
-        Returns:
-            User: The user object or None if not found
-        """
+        """Get user by ID"""
         return self.user_repo.get(user_id)
 
     def get_all_users(self):
-        """Get all users
-        Returns:
-            list: List of all user objects
-        """
+        """Get all users"""
         return self.user_repo.get_all()
 
     def update_user(self, user_id, user_data):
-        """Update a user's information
-        Args:
-            user_id (str): The user's UUID
-            user_data (dict): Dictionary of attributes to update
-        Returns:
-            User: The updated user object or None if not found
-        """
+        """Update user information"""
         user = self.user_repo.get(user_id)
         if user:
-            user_data['updated_at'] = datetime.now()
-            user.update(user_data)
-            return user
+            try:
+                user.update(user_data)
+                return user
+            except ValueError as e:
+                raise ValueError(f"Invalid update data: {str(e)}")
         return None
 
     def get_user_by_email(self, email):
-        """Get a user by email address
-        Args:
-            email (str): The email address to search for
-        Returns:
-            User: The user object or None if not found
-        """
+        """Get user by email address"""
         return self.user_repo.get_by_attribute('email', email)
 
-    def create_amenity(self, amenity_data):
-        """Create a new amenity"""
-        amenity = Amenity(**amenity_data)
-        self.amenity_repo.add(amenity)
-        return amenity
-
-    def get_amenity(self, amenity_id):
-        """Get amenity by ID"""
-        return self.amenity_repo.get(amenity_id)
-
-    def get_all_amenities(self):
-        """Get all amenities"""
-        return self.amenity_repo.get_all()
-
-    def update_amenity(self, amenity_id, amenity_data):
-        """Update an amenity"""
-        amenity = self.amenity_repo.get(amenity_id)
-        if amenity:
-            amenity.update(amenity_data)
-            return amenity
-        return None
-
+    # Place Methods
     def create_place(self, place_data):
         """Create a new place with validation"""
+        place_data.pop('id', None)
+        place_data.pop('created_at', None)
+        place_data.pop('updated_at', None)
+        
         try:
             place = Place(
                 title=place_data['title'],
-                description=place_data.get('description', ''),
                 price=place_data['price'],
                 latitude=place_data['latitude'],
                 longitude=place_data['longitude'],
-                owner_id=place_data['owner_id']
+                owner_id=place_data['owner_id'],
+                description=place_data.get('description', '')
             )
             self.place_repo.add(place)
             return place
@@ -113,11 +83,10 @@ class HBnBFacade:
         place = self.place_repo.get(place_id)
         if place:
             place.owner = self.user_repo.get(place.owner_id)
-            place.amenities = [self.amenity_repo.get(aid) for aid in place.amenity_ids]
         return place
 
     def get_all_places(self):
-        """Get all places with basic info"""
+        """Get all places"""
         return self.place_repo.get_all()
 
     def update_place(self, place_id, place_data):
@@ -140,8 +109,13 @@ class HBnBFacade:
             return True
         return False
 
+    # Review Methods
     def create_review(self, review_data):
         """Create a new review with validation"""
+        review_data.pop('id', None)
+        review_data.pop('created_at', None)
+        review_data.pop('updated_at', None)
+        
         try:
             review = Review(
                 text=review_data['text'],
@@ -184,3 +158,41 @@ class HBnBFacade:
             self.review_repo.delete(review_id)
             return True
         return False
+
+    # Amenity Methods
+    def create_amenity(self, amenity_data):
+        """Create a new amenity"""
+        amenity_data.pop('id', None)
+        amenity_data.pop('created_at', None)
+        amenity_data.pop('updated_at', None)
+        
+        try:
+            amenity = Amenity(
+                name=amenity_data['name']
+            )
+            self.amenity_repo.add(amenity)
+            return amenity
+        except ValueError as e:
+            raise ValueError(f"Invalid amenity data: {str(e)}")
+
+    def get_amenity(self, amenity_id):
+        """Get amenity by ID"""
+        return self.amenity_repo.get(amenity_id)
+
+    def get_all_amenities(self):
+        """Get all amenities"""
+        return self.amenity_repo.get_all()
+
+    def update_amenity(self, amenity_id, amenity_data):
+        """Update amenity information"""
+        amenity = self.amenity_repo.get(amenity_id)
+        if amenity:
+            try:
+                amenity.update(amenity_data)
+                return amenity
+            except ValueError as e:
+                raise ValueError(f"Invalid update data: {str(e)}")
+        return None
+
+# Singleton instance of the facade
+facade = HBnBFacade()
