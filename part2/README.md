@@ -62,20 +62,57 @@ python run.py
    - Main app: http://localhost:5000
    - API documentation: http://localhost:5000/api/v1/
 
+## Business Logic Layer
+
+The application includes four main business entities:
+
+### Models
+
+- **User**: Represents users of the application
+  - Attributes: `id`, `first_name`, `last_name`, `email`, `is_admin`, `created_at`, `updated_at`
+  - Each user can own multiple places and write multiple reviews
+
+- **Place**: Represents rental properties
+  - Attributes: `id`, `title`, `description`, `price`, `latitude`, `longitude`, `owner`, `created_at`, `updated_at`
+  - Each place belongs to one owner (User) and can have multiple reviews and amenities
+
+- **Review**: Represents reviews written by users for places
+  - Attributes: `id`, `text`, `rating`, `place`, `user`, `created_at`, `updated_at`
+  - Each review belongs to one user and one place
+
+- **Amenity**: Represents amenities available at places
+  - Attributes: `id`, `name`, `created_at`, `updated_at`
+  - Can be associated with multiple places (many-to-many relationship)
+
+### Relationships
+
+- **User ↔ Place**: One-to-many (one user can own multiple places)
+- **Place ↔ Review**: One-to-many (one place can have multiple reviews)
+- **User ↔ Review**: One-to-many (one user can write multiple reviews)
+- **Place ↔ Amenity**: Many-to-many (places can have multiple amenities, amenities can be in multiple places)
+
+### Testing Models
+
+Run the model tests to verify everything works:
+
+```bash
+python test_models.py
+```
+
 ## Current Status
 
-This is the initial setup with:
+This is the current progress:
 - ✅ Project structure created
 - ✅ Flask application configured
 - ✅ In-memory repository implemented
 - ✅ Facade pattern setup
+- ✅ Business logic models implemented
+- ✅ Model relationships working
 - ⏳ API endpoints (to be implemented)
-- ⏳ Business logic models (to be implemented)
 - ⏳ Database integration (to be implemented in Part 3)
 
 ## Next Steps
 
-- Implement business logic models (User, Place, Review, Amenity)
-- Create API endpoints
-- Add validation and error handling
+- Create API endpoints for all models
+- Add input validation and error handling
 - Integrate database persistence layer
