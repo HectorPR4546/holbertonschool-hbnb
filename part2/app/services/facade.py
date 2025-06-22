@@ -22,10 +22,9 @@ class HBnBFacade:
             user_data = {k: v for k, v in user_data.items() 
                         if k not in ['id', 'created_at', 'updated_at']}
             
-            # Validate required fields
             required = ['first_name', 'last_name', 'email']
             if not all(field in user_data for field in required):
-                raise ValueError("Missing required fields: first_name, last_name, email")
+                raise ValueError("Missing required fields")
 
             user = User(
                 first_name=user_data['first_name'],
@@ -60,6 +59,54 @@ class HBnBFacade:
 
     def get_user_by_email(self, email):
         return self.user_repo.get_by_attribute('email', email)
+
+    # Place Methods
+    def create_place(self, place_data):
+        """Create a new place with validation"""
+        try:
+            place_data = {k: v for k, v in place_data.items() 
+                        if k not in ['id', 'created_at', 'updated_at']}
+            
+            required = ['title', 'price', 'latitude', 'longitude', 'owner_id']
+            if not all(field in place_data for field in required):
+                raise ValueError("Missing required fields")
+
+            place = Place(
+                title=place_data['title'],
+                price=place_data['price'],
+                latitude=place_data['latitude'],
+                longitude=place_data['longitude'],
+                owner_id=place_data['owner_id'],
+                description=place_data.get('description', '')
+            )
+            self.place_repo.add(place)
+            return place
+        except ValueError as e:
+            return {
+                'error': True,
+                'message': str(e),
+                'field': 'coordinates' if 'latitude' in str(e) or 'longitude' in str(e) else None
+            }
+
+    def get_place(self, place_id):
+        place = self.place_repo.get(place_id)
+        if place:
+            place.owner = self.get_user(place.owner_id)
+        return place
+
+    def get_all_places(self):
+        return self.place_repo.get_all()
+
+    def update_place(self, place_id, place_data):
+        place = self.place_repo.get(place_id)
+        if place:
+            try:
+                place.update(place_data)
+                return place
+            except ValueError as e:
+                return {'error': True, 'message': str(e)}
+        return None
+
 
 
 facade = HBnBFacade()

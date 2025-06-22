@@ -46,13 +46,13 @@ class User(BaseModel):
 
     @email.setter
     def email(self, value):
-        if not isinstance(value, str):
-            raise ValueError("Email must be a string")
-        if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", value):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("Email must be a non-empty string")
+        if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", value.strip()):
             raise ValueError("Invalid email format")
         if len(value) > 120:
             raise ValueError("Email too long (max 120 chars)")
-        self._email = value
+        self._email = value.strip()
 
     def __str__(self):
         return f"[User] {self.first_name} {self.last_name} <{self.email}>"
