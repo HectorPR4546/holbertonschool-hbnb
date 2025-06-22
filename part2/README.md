@@ -7,7 +7,7 @@ This is a simple HBnB (Holberton Airbnb) application built with Flask. The proje
 ## Project Structure
 
 ```text
-hbnb/
+part2/
 ├── app/
 │   ├── __init__.py                 # Flask application factory
 │   ├── api/
