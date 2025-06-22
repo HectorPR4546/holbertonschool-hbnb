@@ -11,9 +11,8 @@ class TestUserEndpoints(unittest.TestCase):
         self.valid_data = {
             "first_name": "Test",
             "last_name": "User",
-            "email": "test@example.com"
+            "email": "valid@example.com"
         }
-        # Clear any existing data
         facade.user_repo._storage = {}
 
     def test_create_valid_user(self):
@@ -22,13 +21,23 @@ class TestUserEndpoints(unittest.TestCase):
         self.assertIn('id', response.json)
 
     def test_create_user_invalid_email(self):
-        invalid_data = self.valid_data.copy()
-        invalid_data['email'] = "invalid-email"
-        response = self.client.post('/api/v1/users/', json=invalid_data)
-        self.assertEqual(response.status_code, 400)
+        test_cases = [
+            ("invalid-email", "Invalid email format"),
+            ("", "Email must be a string"),
+            (None, "Email must be a string"),
+            ("a"*121 + "@test.com", "Email too long")
+        ]
+        
+        for email, expected_error in test_cases:
+            with self.subTest(email=email):
+                invalid_data = self.valid_data.copy()
+                invalid_data['email'] = email
+                response = self.client.post('/api/v1/users/', json=invalid_data)
+                self.assertEqual(response.status_code, 400)
+                self.assertIn(expected_error, response.json['message'])
 
     def test_get_user(self):
-        # Create user directly to avoid API issues
+        # Create directly to avoid API dependency
         user = User(**self.valid_data)
         facade.user_repo.add(user)
         
