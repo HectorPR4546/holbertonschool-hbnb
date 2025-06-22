@@ -3,50 +3,54 @@ from app.services import facade
 
 api = Namespace('users', description='User operations')
 
-# Define the user model for Swagger documentation
 user_model = api.model('User', {
-    'first_name': fields.String(required=True, description='First name'),
-    'last_name': fields.String(required=True, description='Last name'),
-    'email': fields.String(required=True, description='Email address'),
-    'is_admin': fields.Boolean(description='Admin status')
+    'first_name': fields.String(required=True, example='John'),
+    'last_name': fields.String(required=True, example='Doe'),
+    'email': fields.String(required=True, example='john@example.com'),
+    'is_admin': fields.Boolean(default=False)
 })
 
 user_response_model = api.model('UserResponse', {
-    'id': fields.String(description='User ID'),
-    'first_name': fields.String(description='First name'),
-    'last_name': fields.String(description='Last name'),
-    'email': fields.String(description='Email address'),
-    'is_admin': fields.Boolean(description='Admin status')
+    'id': fields.String,
+    'first_name': fields.String,
+    'last_name': fields.String,
+    'email': fields.String,
+    'is_admin': fields.Boolean,
+    'created_at': fields.DateTime,
+    'updated_at': fields.DateTime
+})
+
+error_model = api.model('Error', {
+    'message': fields.String,
+    'field': fields.String(required=False)
 })
 
 @api.route('/')
 class UserList(Resource):
-    @api.expect(user_model, validate=True)
+    @api.expect(user_model)
     @api.marshal_with(user_response_model, code=201)
-    @api.response(400, 'Invalid input or email exists')
+    @api.response(400, 'Validation Error', error_model)
     def post(self):
         """Create a new user"""
         user_data = api.payload
         
-        # Check if email already exists
-        if facade.get_user_by_email(user_data['email']):
-            api.abort(400, 'Email already registered')
+        result = facade.create_user(user_data)
+        if isinstance(result, dict) and result.get('error'):
+            api.abort(400, result['message'], field=result.get('field'))
         
-        new_user = facade.create_user(user_data)
-        return new_user, 201
+        return result, 201
 
     @api.marshal_list_with(user_response_model)
     def get(self):
-        """Get all users"""
-        users = facade.get_all_users()
-        return users, 200
+        """List all users"""
+        return facade.get_all_users(), 200
 
 @api.route('/<string:user_id>')
 class UserResource(Resource):
     @api.marshal_with(user_response_model)
     @api.response(404, 'User not found')
     def get(self, user_id):
-        """Get user by ID"""
+        """Get user details"""
         user = facade.get_user(user_id)
         if not user:
             api.abort(404, 'User not found')
@@ -54,21 +58,16 @@ class UserResource(Resource):
 
     @api.expect(user_model)
     @api.marshal_with(user_response_model)
+    @api.response(400, 'Validation Error', error_model)
     @api.response(404, 'User not found')
-    @api.response(400, 'Invalid input')
     def put(self, user_id):
-        """Update user information"""
+        """Update user"""
         user = facade.get_user(user_id)
         if not user:
             api.abort(404, 'User not found')
         
-        update_data = api.payload
+        result = facade.update_user(user_id, api.payload)
+        if isinstance(result, dict) and result.get('error'):
+            api.abort(400, result['message'])
         
-        # Check if email is being changed to an existing one
-        if 'email' in update_data:
-            existing_user = facade.get_user_by_email(update_data['email'])
-            if existing_user and existing_user.id != user_id:
-                api.abort(400, 'Email already registered')
-        
-        updated_user = facade.update_user(user_id, update_data)
-        return updated_user, 200
+        return result, 200
