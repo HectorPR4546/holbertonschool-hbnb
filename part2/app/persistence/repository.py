@@ -51,3 +51,10 @@ class InMemoryRepository(Repository):
         """Deletes an object"""
         if obj_id in self._storage:
             del self._storage[obj_id]
+
+    def get_by_attribute(self, attr_name, attr_value):
+        """Get object by attribute value"""
+        for obj in self._storage.values():
+            if getattr(obj, attr_name, None) == attr_value:
+                return obj
+        return None
