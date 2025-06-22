@@ -3,8 +3,17 @@ from datetime import datetime
 from . import BaseModel
 
 class User(BaseModel):
-    """User model with enhanced validation"""
+    """User model with comprehensive validation"""
     def __init__(self, first_name, last_name, email, is_admin=False):
+        """
+        Initialize User instance
+        
+        Args:
+            first_name (str): User's first name
+            last_name (str): User's last name
+            email (str): Valid email address
+            is_admin (bool): Admin status
+        """
         super().__init__()
         self.first_name = first_name  # Uses first_name setter
         self.last_name = last_name    # Uses last_name setter
@@ -18,7 +27,7 @@ class User(BaseModel):
     @first_name.setter
     def first_name(self, value):
         if not value or not isinstance(value, str) or len(value) > 50:
-            raise ValueError("First name must be a non-empty string (max 50 chars)")
+            raise ValueError("First name must be 1-50 characters")
         self._first_name = value
 
     @property
@@ -28,7 +37,7 @@ class User(BaseModel):
     @last_name.setter
     def last_name(self, value):
         if not value or not isinstance(value, str) or len(value) > 50:
-            raise ValueError("Last name must be a non-empty string (max 50 chars)")
+            raise ValueError("Last name must be 1-50 characters")
         self._last_name = value
 
     @property
@@ -37,6 +46,13 @@ class User(BaseModel):
 
     @email.setter
     def email(self, value):
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", value):
+        if not isinstance(value, str):
+            raise ValueError("Email must be a string")
+        if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", value):
             raise ValueError("Invalid email format")
+        if len(value) > 120:
+            raise ValueError("Email too long (max 120 chars)")
         self._email = value
+
+    def __str__(self):
+        return f"[User] {self.first_name} {self.last_name} <{self.email}>"
