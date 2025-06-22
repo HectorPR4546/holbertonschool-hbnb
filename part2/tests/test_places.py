@@ -34,12 +34,15 @@ class TestPlaceEndpoints(unittest.TestCase):
         self.assertIn('id', response.json)
         self.assertEqual(response.json['title'], self.valid_data['title'])
 
-    def test_create_place_invalid_coordinates(self):
+    def test_create_place_invalid_data(self):
         test_cases = [
-            ({"latitude": 100}, "Latitude must be between -90 and 90"),
-            ({"longitude": -190}, "Longitude must be between -180 and 180"),
-            ({"price": -50}, "Price must be a positive number"),
-            ({"title": ""}, "Missing required fields")
+            ({"latitude": 100}, "Latitude must be between"),
+            ({"longitude": 200}, "Longitude must be between"),
+            ({"price": -10}, "Price must be positive"),
+            ({"title": ""}, "Title must not be empty"),
+            ({"title": None}, "Title must be a string"),
+            ({"title": "   "}, "Title must not be empty"),
+            ({}, "Missing required fields")
         ]
         
         for data, expected_error in test_cases:

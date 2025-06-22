@@ -26,9 +26,11 @@ class User(BaseModel):
 
     @first_name.setter
     def first_name(self, value):
-        if not value or not isinstance(value, str) or len(value) > 50:
-            raise ValueError("First name must be 1-50 characters")
-        self._first_name = value
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("First name must be a non-empty string")
+        if len(value.strip()) > 50:
+            raise ValueError("First name too long (max 50 chars)")
+        self._first_name = value.strip()
 
     @property
     def last_name(self):
@@ -36,9 +38,11 @@ class User(BaseModel):
 
     @last_name.setter
     def last_name(self, value):
-        if not value or not isinstance(value, str) or len(value) > 50:
-            raise ValueError("Last name must be 1-50 characters")
-        self._last_name = value
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("Last name must be a non-empty string")
+        if len(value.strip()) > 50:
+            raise ValueError("Last name too long (max 50 chars)")
+        self._last_name = value.strip()
 
     @property
     def email(self):
@@ -46,11 +50,15 @@ class User(BaseModel):
 
     @email.setter
     def email(self, value):
-        if not isinstance(value, str) or not value.strip():
-            raise ValueError("Email must be a non-empty string")
+        if value is None:
+            raise ValueError("Email must be a string")
+        if not isinstance(value, str):
+            raise ValueError("Email must be a string")
+        if not value.strip():
+            raise ValueError("Email must not be empty")
         if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", value.strip()):
             raise ValueError("Invalid email format")
-        if len(value) > 120:
+        if len(value.strip()) > 120:
             raise ValueError("Email too long (max 120 chars)")
         self._email = value.strip()
 

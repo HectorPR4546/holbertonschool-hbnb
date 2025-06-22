@@ -22,10 +22,11 @@ class TestUserEndpoints(unittest.TestCase):
 
     def test_create_user_invalid_email(self):
         test_cases = [
-            ("invalid-email", "Invalid email format"),
-            ("", "Email must be a string"),
+            ("", "Email must not be empty"),
             (None, "Email must be a string"),
-            ("a"*121 + "@test.com", "Email too long")
+            ("invalid", "Invalid email format"),
+            ("a"*121 + "@test.com", "Email too long"),
+            ("  ", "Email must not be empty")
         ]
         
         for email, expected_error in test_cases:
@@ -37,7 +38,7 @@ class TestUserEndpoints(unittest.TestCase):
                 self.assertIn(expected_error, response.json['message'])
 
     def test_get_user(self):
-        # Create directly to avoid API dependency
+        # Create user directly to avoid API dependency
         user = User(**self.valid_data)
         facade.user_repo.add(user)
         

@@ -16,15 +16,22 @@ class HBnBFacade:
 
     # User Methods
     def create_user(self, user_data):
-        """Create a new user with validation"""
+        """Create a new user with strict validation"""
         try:
             # Remove auto-generated fields
             user_data = {k: v for k, v in user_data.items() 
-                        if k not in ['id', 'created_at', 'updated_at']}
+                       if k not in ['id', 'created_at', 'updated_at']}
             
+            # Validate required fields
             required = ['first_name', 'last_name', 'email']
             if not all(field in user_data for field in required):
-                raise ValueError("Missing required fields")
+                raise ValueError("Missing required fields: first_name, last_name, email")
+            
+            # Explicit type checking
+            if not isinstance(user_data['email'], str):
+                raise ValueError("Email must be a string")
+            if not user_data['email'].strip():
+                raise ValueError("Email must not be empty")
 
             user = User(
                 first_name=user_data['first_name'],
@@ -42,12 +49,15 @@ class HBnBFacade:
             }
 
     def get_user(self, user_id):
+        """Get user by ID"""
         return self.user_repo.get(user_id)
 
     def get_all_users(self):
+        """Get all users"""
         return self.user_repo.get_all()
 
     def update_user(self, user_id, user_data):
+        """Update user information"""
         user = self.user_repo.get(user_id)
         if user:
             try:
@@ -58,18 +68,23 @@ class HBnBFacade:
         return None
 
     def get_user_by_email(self, email):
+        """Get user by email"""
         return self.user_repo.get_by_attribute('email', email)
 
     # Place Methods
     def create_place(self, place_data):
-        """Create a new place with validation"""
+        """Create a new place with strict validation"""
         try:
             place_data = {k: v for k, v in place_data.items() 
-                        if k not in ['id', 'created_at', 'updated_at']}
+                         if k not in ['id', 'created_at', 'updated_at']}
             
             required = ['title', 'price', 'latitude', 'longitude', 'owner_id']
             if not all(field in place_data for field in required):
-                raise ValueError("Missing required fields")
+                raise ValueError("Missing required fields: title, price, latitude, longitude, owner_id")
+            
+            # Explicit empty title check
+            if not isinstance(place_data['title'], str) or not place_data['title'].strip():
+                raise ValueError("Title must not be empty")
 
             place = Place(
                 title=place_data['title'],
@@ -85,19 +100,22 @@ class HBnBFacade:
             return {
                 'error': True,
                 'message': str(e),
-                'field': 'coordinates' if 'latitude' in str(e) or 'longitude' in str(e) else None
+                'field': 'title' if 'title' in str(e).lower() else None
             }
 
     def get_place(self, place_id):
+        """Get place by ID with owner details"""
         place = self.place_repo.get(place_id)
         if place:
             place.owner = self.get_user(place.owner_id)
         return place
 
     def get_all_places(self):
+        """Get all places"""
         return self.place_repo.get_all()
 
     def update_place(self, place_id, place_data):
+        """Update place information"""
         place = self.place_repo.get(place_id)
         if place:
             try:
@@ -107,6 +125,7 @@ class HBnBFacade:
                 return {'error': True, 'message': str(e)}
         return None
 
+    # Review and Amenity methods would go here...
 
-
+# Singleton instance
 facade = HBnBFacade()

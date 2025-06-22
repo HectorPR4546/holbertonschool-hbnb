@@ -7,7 +7,7 @@ class Place(BaseModel):
         Initialize Place instance with validation
         
         Args:
-            title (str): Property title
+            title (str): Non-empty property title
             price (float): Positive number
             latitude (float): Between -90 and 90
             longitude (float): Between -180 and 180
@@ -15,12 +15,26 @@ class Place(BaseModel):
             description (str): Optional description
         """
         super().__init__()
-        self.title = title
+        self.title = title  # Uses title setter
         self.description = description
-        self.price = price  # Uses property setter
-        self.latitude = latitude  # Uses property setter
-        self.longitude = longitude  # Uses property setter
+        self.price = price  # Uses price setter
+        self.latitude = latitude  # Uses latitude setter
+        self.longitude = longitude  # Uses longitude setter
         self.owner_id = owner_id
+
+    @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, value):
+        if value is None:
+            raise ValueError("Title must be a string")
+        if not isinstance(value, str):
+            raise ValueError("Title must be a string")
+        if not value.strip():
+            raise ValueError("Title must not be empty")
+        self._title = value.strip()
 
     @property
     def price(self):
@@ -54,6 +68,8 @@ class Place(BaseModel):
 
     def update(self, data):
         """Update place with validation"""
+        if 'title' in data:
+            self.title = data['title']
         if 'price' in data:
             self.price = data['price']
         if 'latitude' in data:
