@@ -8,7 +8,7 @@ user = User("John", "Doe", "john@example.com")
 print("User:", user.first_name, user.last_name, user.email)
 
 # Test Place
-place = Place("Nice Spot", "Great view", 150.0, 18.0, -66.0, user)
+place = Place("Nice Spot", "Great view", 150.0, 18.0, -66.0, user.id)
 print("Place:", place.title, place.owner.email)
 
 # Test Review
