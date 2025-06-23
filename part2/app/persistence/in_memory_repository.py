@@ -29,8 +29,8 @@ class InMemoryRepository(Repository):
         """Updates an existing entity by its ID with new data."""
         entity = self.data.get(entity_id)
         if entity:
-            entity.update(new_data) # This calls the model's update method
-            self.save(entity) # Re-save to update timestamps
+            entity.update(new_data)
+            self.save(entity)
             return entity
         return None
 
