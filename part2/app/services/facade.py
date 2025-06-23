@@ -59,8 +59,9 @@ class HBnBFacade:
         Creates a new place instance.
         Expects owner_id and a list of amenity_ids in place_data.
         """
+        print(f"DEBUG: Facade.create_place received data: {place_data}") # DEBUG 1
         owner_id = place_data.pop('owner_id', None)
-        amenity_ids = place_data.pop('amenities', []) # 'amenities' will be a list of IDs
+        amenity_ids = place_data.pop('amenities', [])
 
         if not owner_id:
             raise ValueError("Owner ID is required to create a place.")
@@ -68,29 +69,40 @@ class HBnBFacade:
         owner = self.user_repo.get(owner_id)
         if not owner:
             raise ValueError(f"Owner with ID {owner_id} not found.")
+        print(f"DEBUG: Found owner: {owner.id}") # DEBUG 2
 
-        # Instantiate Place with required arguments first
-        # Use a copy of place_data to avoid modifying the original when popping
+        # Important: Ensure Place.py's __init__ can handle missing description
+        # or ensure description is always present in place_data
         place_creation_data = {
             'title': place_data.get('title'),
-            'description': place_data.get('description'),
+            'description': place_data.get('description'), # .get() returns None if not present
             'price': place_data.get('price'),
             'latitude': place_data.get('latitude'),
             'longitude': place_data.get('longitude'),
-            'owner': owner # Pass the actual User object
+            'owner': owner
         }
-        place = Place(**place_creation_data)
+        print(f"DEBUG: Place creation dict for Place(**kwargs): {place_creation_data}") # DEBUG 3
+
+        try:
+            place = Place(**place_creation_data)
+            print(f"DEBUG: Place object successfully instantiated: {place.id}, Title: {place.title}") # DEBUG 4
+        except Exception as e:
+            print(f"ERROR: Exception during Place instantiation: {e}") # DEBUG 5
+            # Re-raise to let the API endpoint catch it
+            raise
 
         # Add amenities to the place object
+        print(f"DEBUG: Processing amenities for place {place.id}. IDs: {amenity_ids}") # DEBUG 6
         for amenity_id in amenity_ids:
             amenity = self.amenity_repo.get(amenity_id)
             if not amenity:
-                # Decide if you want to fail creation or just skip invalid amenities
-                print(f"Warning: Amenity with ID {amenity_id} not found. Skipping.")
+                print(f"WARNING: Amenity with ID {amenity_id} not found. Skipping.")
                 continue
             place.add_amenity(amenity)
+            print(f"DEBUG: Added amenity {amenity.name} to place.") # DEBUG 7
 
         self.place_repo.add(place)
+        print(f"DEBUG: Place {place.id} added to repository. Returning place object.") # DEBUG 8
         return place
 
     def get_place(self, place_id):
