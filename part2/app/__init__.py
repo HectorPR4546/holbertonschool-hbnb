@@ -12,7 +12,8 @@ def create_app():
         app,
         version='1.0',
         title='HBnB API',
-        description='HBnB Application API'
+        description='HBnB Application API',
+        doc='/api/v1/'  # Swagger UI at /api/v1/
     )
 
     # Register all namespaces
