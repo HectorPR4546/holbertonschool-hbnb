@@ -4,6 +4,14 @@ from datetime import datetime
 class Place:
     def __init__(self, title, price, latitude, longitude, owner_id,
                  description="", amenities=None, id=None, created_at=None, updated_at=None):
+        # Cast numeric values to correct types before validating
+        try:
+            price = float(price)
+            latitude = float(latitude)
+            longitude = float(longitude)
+        except (ValueError, TypeError):
+            raise ValueError("Price, latitude, and longitude must be numbers")
+
         if not title:
             raise ValueError("Title cannot be empty")
         if price <= 0:
