@@ -2,12 +2,11 @@ from uuid import uuid4
 from datetime import datetime
 
 class User:
-    def __init__(self, first_name, last_name, email, password, id=None):
+    def __init__(self, first_name, last_name, email, id=None):
         self.id = id if id else str(uuid4())
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        self.password = password
         self.created_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
 
