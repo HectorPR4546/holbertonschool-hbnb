@@ -1,6 +1,6 @@
 # part2/app/persistence/in_memory_repository.py
 
-from app.persistence.repository import Repository # This correctly imports your abstract base class
+from app.persistence.repository import Repository # Correctly imports the abstract base class
 
 class InMemoryRepository(Repository):
     """
@@ -8,7 +8,7 @@ class InMemoryRepository(Repository):
     Stores data in a dictionary.
     """
     def __init__(self):
-        # A dictionary to simulate a database/storage
+        # We use a dictionary to simulate a database/storage
         # Keys are entity IDs, values are entity objects
         self.data = {}
 
@@ -17,6 +17,8 @@ class InMemoryRepository(Repository):
            This method fulfills the 'add' abstract method.
         """
         if entity.id in self.data:
+            # If your tests expect an exception for duplicate IDs, keep this.
+            # Otherwise, you might choose to overwrite or just return the existing.
             raise ValueError(f"Entity with ID {entity.id} already exists.")
         self.data[entity.id] = entity
         return entity
@@ -35,17 +37,17 @@ class InMemoryRepository(Repository):
         """Updates an existing entity by its ID with new data."""
         entity = self.data.get(entity_id)
         if entity:
+            # Assuming entity objects have an 'update' method to apply new_data
             entity.update(new_data)
-            
             return entity
-        return None
+        return None # Indicate entity not found
 
     def delete(self, entity_id):
         """Deletes an entity by its ID."""
         if entity_id in self.data:
             del self.data[entity_id]
-            return True
-        return False
+            return True # Indicate successful deletion
+        return False # Indicate entity not found
 
     def get_by_attribute(self, attribute_name, attribute_value):
         """
@@ -62,5 +64,6 @@ class InMemoryRepository(Repository):
         """
         Clears all data from the repository.
         Crucial for isolating tests to prevent side effects between runs.
+        This method is specific to InMemoryRepository and not part of the abstract interface.
         """
         self.data = {}

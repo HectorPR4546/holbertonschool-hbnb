@@ -1,54 +1,39 @@
+# part2/app/persistence/repository.py
+
 from abc import ABC, abstractmethod
 
 class Repository(ABC):
+    """
+    Abstract Base Class for a generic repository.
+    Defines the interface for data operations.
+    """
+
     @abstractmethod
-    def add(self, obj):
+    def add(self, entity):
+        """Adds a new entity to the repository."""
         pass
 
     @abstractmethod
-    def get(self, obj_id):
+    def get(self, entity_id):
+        """Retrieves an entity by its ID."""
         pass
 
     @abstractmethod
     def get_all(self):
+        """Retrieves all entities."""
         pass
 
     @abstractmethod
-    def update(self, obj_id, data):
+    def update(self, entity_id, new_data):
+        """Updates an existing entity by its ID with new data."""
         pass
 
     @abstractmethod
-    def delete(self, obj_id):
+    def delete(self, entity_id):
+        """Deletes an entity by its ID."""
         pass
 
     @abstractmethod
-    def get_by_attribute(self, attr_name, attr_value):
+    def get_by_attribute(self, attribute_name, attribute_value):
+        """Retrieves entities by a specific attribute and its value."""
         pass
-
-
-class InMemoryRepository(Repository):
-    def __init__(self):
-        self._storage = {}
-
-    def add(self, obj):
-        self._storage[obj.id] = obj
-
-    def get(self, obj_id):
-        return self._storage.get(obj_id)
-
-    def get_all(self):
-        return list(self._storage.values())
-
-    def update(self, obj_id, data):
-        obj = self.get(obj_id)
-        if obj:
-            # We're assuming the obj has an update method,
-            # which will be defined in our models later!
-            obj.update(data) 
-
-    def delete(self, obj_id):
-        if obj_id in self._storage:
-            del self._storage[obj_id]
-
-    def get_by_attribute(self, attr_name, attr_value):
-        return next((obj for obj in self._storage.values() if getattr(obj, attr_name) == attr_value), None)
