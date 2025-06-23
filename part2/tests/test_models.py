@@ -11,7 +11,7 @@ class TestModels(unittest.TestCase):
 
     def test_create_place(self):
         user = User("John", "Doe", "john@example.com")
-        place = Place("Nice Spot", "Great view", 150.0, 18.0, -66.0, user.id)
+        place = Place("Nice Spot", 150.0, 18.0, -66.0, user.id, "Great view")
         self.assertEqual(place.title, "Nice Spot")
         self.assertEqual(place.owner_id, user.id)
 
