@@ -12,7 +12,6 @@ class HBnBFacade:
         self.amenity_repo = InMemoryRepository()
 
     def get_user_by_email(self, email):
-        """Find a user by email"""
         return self.user_repo.get_by_attribute('email', email)
 
     def create_user(self, user_data):
@@ -30,6 +29,10 @@ class HBnBFacade:
 
     def get_amenity(self, amenity_id):
         return self.amenity_repo.get(amenity_id)
+
+    def get_amenity_by_name(self, name):
+        """Find an amenity by name"""
+        return self.amenity_repo.get_by_attribute('name', name)
 
     def get_all_amenities(self):
         return self.amenity_repo.get_all()
