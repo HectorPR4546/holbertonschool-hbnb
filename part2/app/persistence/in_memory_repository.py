@@ -1,8 +1,6 @@
 # part2/app/persistence/in_memory_repository.py
 
-# It's important that this import correctly points to your base Repository class
-# For example, if Repository is in repository.py in the same folder:
-from .repository import Repository
+from app.persistence.repository import Repository # This correctly imports your abstract base class
 
 class InMemoryRepository(Repository):
     """
@@ -10,18 +8,23 @@ class InMemoryRepository(Repository):
     Stores data in a dictionary.
     """
     def __init__(self):
-        # We use a dictionary to simulate a database/storage
+        # A dictionary to simulate a database/storage
         # Keys are entity IDs, values are entity objects
         self.data = {}
 
-    def save(self, entity):
-        """Saves an entity to the in-memory store."""
-        # This assumes entities have a unique 'id' attribute
+    def add(self, entity):
+        """Adds/Saves a new entity to the in-memory store.
+           This method fulfills the 'add' abstract method.
+        """
+        if entity.id in self.data:
+            raise ValueError(f"Entity with ID {entity.id} already exists.")
         self.data[entity.id] = entity
         return entity
 
-    def get_by_id(self, entity_id):
-        """Retrieves an entity by its ID."""
+    def get(self, entity_id):
+        """Retrieves an entity by its ID.
+           This method fulfills the 'get' abstract method.
+        """
         return self.data.get(entity_id)
 
     def get_all(self):
@@ -32,11 +35,8 @@ class InMemoryRepository(Repository):
         """Updates an existing entity by its ID with new data."""
         entity = self.data.get(entity_id)
         if entity:
-            # Assuming your model entities have an `update` method
-            # that takes a dictionary of new_data and applies it.
             entity.update(new_data)
-            # Re-save to ensure any internal updates (like timestamps) are handled
-            self.save(entity)
+            
             return entity
         return None
 
@@ -46,7 +46,7 @@ class InMemoryRepository(Repository):
             del self.data[entity_id]
             return True
         return False
-    
+
     def get_by_attribute(self, attribute_name, attribute_value):
         """
         Retrieves entities by a specific attribute and its value.
