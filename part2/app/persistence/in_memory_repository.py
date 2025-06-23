@@ -8,7 +8,7 @@ class InMemoryRepository(Repository):
     Stores data in a dictionary.
     """
     def __init__(self):
-        # We use a dictionary to simulate a database/storage
+        # A dictionary to simulate a database/storage
         # Keys are entity IDs, values are entity objects
         self.data = {}
 
@@ -17,8 +17,6 @@ class InMemoryRepository(Repository):
            This method fulfills the 'add' abstract method.
         """
         if entity.id in self.data:
-            # If your tests expect an exception for duplicate IDs, keep this.
-            # Otherwise, you might choose to overwrite or just return the existing.
             raise ValueError(f"Entity with ID {entity.id} already exists.")
         self.data[entity.id] = entity
         return entity
