@@ -4,7 +4,7 @@ from app.services import facade
 
 api = Namespace('places', description='Place operations')
 
-# Models for related entities
+# Models for related entities (used in output only)
 amenity_model = api.model('PlaceAmenity', {
     'id': fields.String(description='Amenity ID'),
     'name': fields.String(description='Name of the amenity')
@@ -24,30 +24,44 @@ review_model = api.model('PlaceReview', {
     'user_id': fields.String(description='ID of the user')
 })
 
-# Main Place model
-place_model = api.model('Place', {
-    'id': fields.String(readOnly=True, description='Place ID'),
+# Model for client input (POST/PUT)
+place_input_model = api.model('PlaceInput', {
     'title': fields.String(required=True, description='Title of the place'),
     'description': fields.String(description='Description of the place'),
     'price': fields.Float(required=True, description='Price per night'),
     'latitude': fields.Float(required=True, description='Latitude of the place'),
     'longitude': fields.Float(required=True, description='Longitude of the place'),
     'owner_id': fields.String(required=True, description='ID of the owner'),
-    'owner': fields.Nested(user_model, description='Owner of the place'),
-    'amenities': fields.List(fields.Nested(amenity_model), description='List of amenities'),
-    'reviews': fields.List(fields.Nested(review_model), description='List of reviews')
+    'amenities': fields.List(fields.String, description='List of amenity IDs')
+})
+
+# Model for output (GET)
+place_output_model = api.model('Place', {
+    'id': fields.String(readOnly=True, description='Place ID'),
+    'title': fields.String(description='Title of the place'),
+    'description': fields.String(description='Description of the place'),
+    'price': fields.Float(description='Price per night'),
+    'latitude': fields.Float(description='Latitude of the place'),
+    'longitude': fields.Float(description='Longitude of the place'),
+    'owner_id': fields.String(description='ID of the owner'),
+    'owner': fields.Nested(user_model),
+    'amenities': fields.List(fields.Nested(amenity_model)),
+    'reviews': fields.List(fields.Nested(review_model))
 })
 
 
 @api.route('/')
 class PlaceList(Resource):
-    @api.marshal_list_with(place_model)
+    @api.marshal_list_with(place_output_model)
     def get(self):
         """Retrieve a list of all places"""
-        return facade.get_all_places()
+        places = []
+        for place in facade.get_all_places():
+            places.append(facade.get_place(place['id']))
+        return places
 
-    @api.expect(place_model)
-    @api.marshal_with(place_model, code=201)
+    @api.expect(place_input_model)
+    @api.marshal_with(place_output_model, code=201)
     @api.response(400, 'Invalid input data')
     def post(self):
         """Register a new place"""
@@ -62,7 +76,7 @@ class PlaceList(Resource):
 @api.param('place_id', 'Place ID')
 @api.response(404, 'Place not found')
 class PlaceResource(Resource):
-    @api.marshal_with(place_model)
+    @api.marshal_with(place_output_model)
     def get(self, place_id):
         """Get place details by ID"""
         try:
@@ -70,7 +84,7 @@ class PlaceResource(Resource):
         except ValueError as e:
             api.abort(404, str(e))
 
-    @api.expect(place_model)
+    @api.expect(place_input_model)
     @api.response(200, 'Place updated successfully')
     @api.response(400, 'Invalid input data')
     def put(self, place_id):
