@@ -79,27 +79,27 @@ class HBnBFacade:
         if not place:
             raise ValueError("Place not found")
 
-            place_dict = place.to_dict()
+        place_dict = place.to_dict()
 
     # Add owner info
-            owner = self.users.get(place.owner_id)
-            place_dict["owner"] = owner.to_dict() if owner else None
+        owner = self.users.get(place.owner_id)
+        place_dict["owner"] = owner.to_dict() if owner else None
 
     # Add amenities info
-            place_dict["amenities"] = [
+        place_dict["amenities"] = [
         self.amenities[a_id].to_dict()
         for a_id in place.amenities
         if a_id in self.amenities
     ]
 
     # Add reviews info
-            place_dict["reviews"] = [
+        place_dict["reviews"] = [
         r.to_dict()
         for r in self.reviews.values()
         if r.place_id == place.id
     ]
 
-            return place_dict
+        return place_dict
 
     def get_all_places(self):
         return [p.to_dict() for p in self.places.values()]
