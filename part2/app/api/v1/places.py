@@ -94,3 +94,16 @@ class PlaceResource(Resource):
             return facade.update_place(place_id, place_data)
         except ValueError as e:
             api.abort(400, str(e))
+
+@api.route('/<string:place_id>/reviews')
+@api.param('place_id', 'Place ID')
+@api.response(404, 'Place not found')
+class PlaceReviewList(Resource):
+    @api.marshal_list_with(review_model)
+    def get(self, place_id):
+        """Get all reviews for a specific place"""
+        try:
+            return facade.get_reviews_by_place(place_id)
+        except ValueError as e:
+            api.abort(404, str(e))
+
