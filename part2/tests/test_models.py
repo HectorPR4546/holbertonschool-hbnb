@@ -3,20 +3,19 @@ from app.models.place import Place
 from app.models.review import Review
 from app.models.amenity import Amenity
 
-# Test User
+# Create dummy user
 user = User("John", "Doe", "john@example.com")
-print("User:", user.first_name, user.last_name, user.email)
 
-# Test Place
+# Create dummy place
 place = Place("Nice Spot", "Great view", 150.0, 18.0, -66.0, user.id)
-print("Place:", place.title, place.owner.email)
 
-# Test Review
-review = Review("Amazing place!", 5, place, user)
-place.add_review(review)
-print("Review count:", len(place.reviews))
+# Create dummy review
+review = Review("Amazing experience", 5, user.id, place.id)
 
-# Test Amenity
-wifi = Amenity("Wi-Fi")
-place.add_amenity(wifi)
-print("Amenities:", [a.name for a in place.amenities])
+# Create dummy amenity
+amenity = Amenity("Free Parking")
+
+print("User:", user.first_name, user.email)
+print("Place:", place.title, place.owner_id)
+print("Review:", review.text, review.rating)
+print("Amenity:", amenity.name)
