@@ -30,6 +30,7 @@ class Review(BaseModel):
 
     @text.setter
     def text(self, value):
+        # Validation: Not empty
         if not isinstance(value, str) or not value.strip():
             raise ValueError("Review text cannot be empty.")
         self._text = value.strip()
@@ -40,6 +41,7 @@ class Review(BaseModel):
 
     @rating.setter
     def rating(self, value):
+        # Validation: Integer between 1 and 5
         if not isinstance(value, int):
             raise TypeError("Rating must be an integer.")
         if not (1 <= value <= 5):

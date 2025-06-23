@@ -38,6 +38,7 @@ class Place(BaseModel):
 
     @title.setter
     def title(self, value):
+        # Validation: Not empty
         if not isinstance(value, str) or not value.strip():
             raise ValueError("Title cannot be empty.")
         self._title = value.strip()
@@ -64,7 +65,7 @@ class Place(BaseModel):
     def price(self, value):
         if not isinstance(value, (int, float)):
             raise TypeError("Price must be a number.")
-        if value < 0:
+        if value < 0: # Ensures positive or zero
             raise ValueError("Price must be a non-negative number.")
         self._price = float(value)
 
@@ -146,7 +147,6 @@ class Place(BaseModel):
             self.latitude = data['latitude']
         if 'longitude' in data:
             self.longitude = data['longitude']
-        # owner and amenities lists are handled directly in Facade.update_place
         self.updated_at = datetime.now()
 
     def to_dict(self, include_relationships=False):
@@ -164,9 +164,7 @@ class Place(BaseModel):
             "owner_id": self.owner.id if self.owner else None, # Safely access owner.id
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
-            # Reviews are usually nested, but their IDs might be shown here in a flat list
-            # by default, if include_relationships is False.
-            "reviews": [review.id for review in self.reviews]
+            "reviews": [review.id for review in self.reviews] # Default to showing review IDs
         }
 
         if include_relationships:

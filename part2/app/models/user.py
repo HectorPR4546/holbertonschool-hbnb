@@ -28,9 +28,12 @@ class User(BaseModel):
 
     @email.setter
     def email(self, value):
-        if not isinstance(value, str) or "@" not in value or "." not in value:
+        # Validation: Not empty, basic email format check
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("Email cannot be empty.")
+        if "@" not in value or "." not in value: # Basic email format check
             raise ValueError("Invalid email format.")
-        self._email = value
+        self._email = value.strip() # Ensure leading/trailing whitespace is removed
 
     @property
     def first_name(self):
@@ -38,6 +41,7 @@ class User(BaseModel):
 
     @first_name.setter
     def first_name(self, value):
+        # Validation: Not empty
         if not isinstance(value, str) or not value.strip():
             raise ValueError("First name cannot be empty.")
         self._first_name = value.strip()
@@ -48,6 +52,7 @@ class User(BaseModel):
 
     @last_name.setter
     def last_name(self, value):
+        # Validation: Not empty
         if not isinstance(value, str) or not value.strip():
             raise ValueError("Last name cannot be empty.")
         self._last_name = value.strip()
