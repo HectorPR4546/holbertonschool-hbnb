@@ -1,12 +1,12 @@
 # part2/app/api/v1/places.py
 
 from flask_restx import Namespace, Resource, fields
-from app.services import facade # Import the facade
+from app.services import facade
+from app.api.v1.reviews import review_list_item_model
 
 api = Namespace('places', description='Place operations')
 
 # Define the models for related entities to be used in output
-# These are read-only representations for embedding
 owner_model_output = api.model('PlaceOwnerOutput', {
     'id': fields.String(description='User ID'),
     'first_name': fields.String(description='First name of the owner'),
@@ -22,12 +22,12 @@ amenity_model_output = api.model('PlaceAmenityOutput', {
 # Define the place model for input validation (POST/PUT)
 place_input_model = api.model('PlaceInput', {
     'title': fields.String(required=True, description='Title of the place', max_length=100),
-    'description': fields.String(required=False, description='Description of the place'), # Description is optional
+    'description': fields.String(required=False, description='Description of the place'),
     'price': fields.Float(required=True, description='Price per night', min=0.0),
     'latitude': fields.Float(required=True, description='Latitude of the place', min=-90.0, max=90.0),
     'longitude': fields.Float(required=True, description='Longitude of the place', min=-180.0, max=180.0),
     'owner_id': fields.String(required=True, description='ID of the owner'),
-    'amenities': fields.List(fields.String, required=False, description="List of amenity IDs to associate") # Optional in input
+    'amenities': fields.List(fields.String, required=False, description="List of amenity IDs to associate")
 })
 
 # Define the full place response model for GET by ID and successful POST/PUT
@@ -38,9 +38,9 @@ place_response_model = api.model('PlaceResponse', {
     'price': fields.Float(description='Price per night'),
     'latitude': fields.Float(description='Latitude of the place'),
     'longitude': fields.Float(description='Longitude of the place'),
-    'owner': fields.Nested(owner_model_output, description='Details of the place owner', allow_null=True), # Allow null owner
+    'owner': fields.Nested(owner_model_output, description='Details of the place owner', allow_null=True),
     'amenities': fields.List(fields.Nested(amenity_model_output), description='List of amenities for the place'),
-    'reviews': fields.List(fields.String, description='List of review IDs for the place (will be nested later)'),
+    'reviews': fields.List(fields.Nested(review_list_item_model), description='List of reviews for the place'), # UPDATED HERE
     'created_at': fields.DateTime(dt_format='iso8601', description='Timestamp of creation'),
     'updated_at': fields.DateTime(dt_format='iso8601', description='Timestamp of last update')
 })
@@ -52,7 +52,8 @@ place_list_item_model = api.model('PlaceListItem', {
     'price': fields.Float(description='Price per night'),
     'latitude': fields.Float(description='Latitude of the place'),
     'longitude': fields.Float(description='Longitude of the place'),
-    'owner_id': fields.String(description='ID of the owner', allow_null=True), # Allow null owner_id
+    'owner_id': fields.String(description='ID of the owner', allow_null=True),
+    'reviews': fields.List(fields.Nested(review_list_item_model), description='List of reviews for the place'), # ADDED HERE FOR CONSISTENCY
     'created_at': fields.DateTime(dt_format='iso8601', description='Timestamp of creation'),
     'updated_at': fields.DateTime(dt_format='iso8601', description='Timestamp of last update')
 })
@@ -72,10 +73,8 @@ class PlaceList(Resource):
             new_place = facade.create_place(place_data)
             return new_place.to_dict(include_relationships=True), 201
         except (ValueError, TypeError) as e:
-            # Catch errors related to validation from model or facade, owner not found, etc.
             return {'message': str(e)}, 400
         except Exception as e:
-            # Catch any unexpected errors
             api.abort(500, message=f"An unexpected error occurred: {str(e)}")
 
 
@@ -85,8 +84,8 @@ class PlaceList(Resource):
     def get(self):
         """Retrieve a list of all places"""
         places = facade.get_all_places()
-        # For list view, we use a simpler to_dict which doesn't include nested relationships
-        return [place.to_dict() for place in places], 200
+        # For list view, we include reviews by default now per list_item_model
+        return [place.to_dict(include_relationships=True) for place in places], 200 # Must use True to get reviews
 
 @api.route('/<string:place_id>')
 @api.param('place_id', 'The place unique identifier')
@@ -103,8 +102,8 @@ class PlaceResource(Resource):
         return place.to_dict(include_relationships=True), 200
 
     @api.doc('update_place')
-    @api.expect(place_input_model, validate=True) # Expect input model, but only fields provided will be updated
-    @api.marshal_with(place_response_model) # Return full updated object
+    @api.expect(place_input_model, validate=True)
+    @api.marshal_with(place_response_model)
     @api.response(200, 'Place updated successfully')
     @api.response(404, 'Place not found')
     @api.response(400, 'Invalid input data or Owner not found')
@@ -117,7 +116,6 @@ class PlaceResource(Resource):
                 return {'message': 'Place not found'}, 404
             return updated_place.to_dict(include_relationships=True), 200
         except (ValueError, TypeError) as e:
-            # Catch validation errors from the Place model's setters or Facade
             return {'message': str(e)}, 400
         except Exception as e:
             api.abort(500, message=f"An unexpected error occurred: {str(e)}")

@@ -1,27 +1,26 @@
+# part2/app/models/review.py
+
 from app.models.base_model import BaseModel
-from app.models.place import Place # Need to import Place for type checking
-from app.models.user import User   # Need to import User for type checking
+from app.models.user import User  # Import User for type checking
+from app.models.place import Place  # Import Place for type checking
+from datetime import datetime
 
 class Review(BaseModel):
-    def __init__(self, text, rating, place, user):
-        super().__init__()
+    def __init__(self, text, rating, user, place, **kwargs):
+        super().__init__(**kwargs)
+        # Initialize internal attributes
         self._text = None
         self._rating = None
-        self._place = None # Will hold a Place object
-        self._user = None  # Will hold a User object
+        self._user = None
+        self._place = None
 
-        # Assign through setters to trigger validation
+        # Assign values using setters to trigger validation
         self.text = text
         self.rating = rating
-        self.place = place # This setter will validate it's a Place
-        self.user = user   # This setter will validate it's a User
+        self.user = user
+        self.place = place
 
-        # Automatically add this review to the place's review list
-        # This creates the one-to-many relationship from Place to Review
-        if self.place: # Ensure place is not None after validation
-            self.place.add_review(self)
-            # Note: We update the place's timestamp when adding a review
-            # The place.add_review method handles its own save()
+    # --- Properties with Getters and Setters for Validation ---
 
     @property
     def text(self):
@@ -29,12 +28,9 @@ class Review(BaseModel):
 
     @text.setter
     def text(self, value):
-        if not value:
+        if not isinstance(value, str) or not value.strip():
             raise ValueError("Review text cannot be empty.")
-        if not isinstance(value, str):
-            raise TypeError("Review text must be a string.")
-        self._text = value
-        self.save()
+        self._text = value.strip()
 
     @property
     def rating(self):
@@ -47,18 +43,6 @@ class Review(BaseModel):
         if not (1 <= value <= 5):
             raise ValueError("Rating must be between 1 and 5.")
         self._rating = value
-        self.save()
-
-    @property
-    def place(self):
-        return self._place
-
-    @place.setter
-    def place(self, value):
-        if not isinstance(value, Place):
-            raise TypeError("Place must be an instance of Place.")
-        self._place = value
-        self.save()
 
     @property
     def user(self):
@@ -67,43 +51,49 @@ class Review(BaseModel):
     @user.setter
     def user(self, value):
         if not isinstance(value, User):
-            raise TypeError("User must be an instance of User.")
+            raise TypeError("Review user must be an instance of User.")
         self._user = value
-        self.save()
+
+    @property
+    def place(self):
+        return self._place
+
+    @place.setter
+    def place(self, value):
+        if not isinstance(value, Place):
+            raise TypeError("Review place must be an instance of Place.")
+        self._place = value
+
+    # --- Update and to_dict Methods ---
+
+    def update(self, data):
+        """Updates Review attributes, using setters for validation."""
+        if 'text' in data:
+            self.text = data['text']
+        if 'rating' in data:
+            self.rating = data['rating']
+        # user and place relationships are not updated via this method
+        self.updated_at = datetime.now()
 
     def to_dict(self):
-        """Returns a dictionary representation of the Review instance."""
+        """
+        Returns a dictionary representation of the Review instance.
+        Relationships (user and place) are represented by their IDs only.
+        """
         return {
             "id": self.id,
             "text": self.text,
             "rating": self.rating,
-            "place_id": self.place.id, # Store place's ID
-            "user_id": self.user.id,   # Store user's ID
+            "user_id": self.user.id if self.user else None,
+            "place_id": self.place.id if self.place else None,
             "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat(),
+            "updated_at": self.updated_at.isoformat()
         }
 
-    def __repr__(self):
-        return f"Review(id='{self.id}', rating={self.rating}, place_id='{self.place.id}', user_id='{self.user.id}')"
-
-    def update(self, data):
-        """
-        Updates the review attributes based on the provided dictionary.
-        This overrides BaseModel's update to use setters for validation.
-        """
-        super_keys = ['id', 'created_at', 'updated_at']
-        for key, value in data.items():
-            if key in super_keys:
-                continue
-
-            # Special handling for place and user if they were to be updated directly
-            # For now, we expect them to be Place/User objects.
-            if key == 'place':
-                self.place = value # Use the setter
-            elif key == 'user':
-                self.user = value # Use the setter
-            elif hasattr(self, key):
-                setattr(self, key, value)
-            else:
-                print(f"Warning: Attempted to update non-existent attribute '{key}' for Review.")
-        self.save()
+    def to_nested_dict(self):
+        """Returns a simplified dictionary for nested review display (e.g., within a Place)."""
+        return {
+            "id": self.id,
+            "text": self.text,
+            "rating": self.rating
+        }

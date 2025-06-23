@@ -3,6 +3,7 @@
 from app.models.base_model import BaseModel
 from app.models.user import User # Import User for type checking owner
 from app.models.amenity import Amenity # Import Amenity for type checking amenities
+from app.models.review import Review # IMPORT for review type checking
 import uuid
 from datetime import datetime
 
@@ -116,9 +117,15 @@ class Place(BaseModel):
     def reviews(self):
         return list(self._reviews) # Return a copy
 
-    def add_review(self, review):
-        # This will be implemented fully with Review entity
-        self._reviews.append(review)
+    def add_review(self, review): # ADDED/CONFIRMED for reviews
+        if not isinstance(review, Review):
+            raise TypeError("Cannot add non-Review object to reviews.")
+        if review not in self._reviews:
+            self._reviews.append(review)
+
+    def remove_review(self, review_id): # ADDED for reviews
+        """Removes a review from the place's collection by its ID."""
+        self._reviews = [r for r in self._reviews if r.id != review_id]
 
     # --- Update and to_dict Methods ---
 
@@ -140,7 +147,7 @@ class Place(BaseModel):
     def to_dict(self, include_relationships=False):
         """
         Returns a dictionary representation of the Place instance.
-        If include_relationships is True, includes nested owner and amenities details.
+        If include_relationships is True, includes nested owner, amenities, and reviews details.
         """
         data = {
             "id": self.id,
@@ -152,17 +159,21 @@ class Place(BaseModel):
             "owner_id": self.owner.id if self.owner else None, # Safely access owner.id
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
-            "reviews": [review.id for review in self.reviews] # List of review IDs
+            "reviews": [review.id for review in self.reviews] # List of review IDs by default
         }
 
         if include_relationships:
             # Include full owner object if requested
-            if self.owner: # Check if owner is not None before calling to_dict
+            if self.owner:
                 data["owner"] = self.owner.to_dict()
             else:
-                data["owner"] = None # Explicitly set to None if no owner
+                data["owner"] = None
 
             # Include full amenities list if requested
             data["amenities"] = [amenity.to_dict() for amenity in self.amenities]
+
+            # Include full reviews list if requested, using their nested dict format
+            data["reviews"] = [review.to_nested_dict() for review in self.reviews]
+
 
         return data

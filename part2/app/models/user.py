@@ -1,49 +1,24 @@
+# part2/app/models/user.py
+
 from app.models.base_model import BaseModel
-import re # We'll need this for email validation!
+from app.models.review import Review # IMPORT for review type checking
+from app.models.place import Place # IMPORT for place type checking
+from datetime import datetime
 
 class User(BaseModel):
-    def __init__(self, first_name, last_name, email, is_admin=False):
-        super().__init__()
-        self._first_name = None # Use private attributes to enforce validation via setters
-        self._last_name = None
+    def __init__(self, email, first_name, last_name, **kwargs):
+        super().__init__(**kwargs)
         self._email = None
-        self._is_admin = False # Default to False
+        self._first_name = None
+        self._last_name = None
+        self._reviews = [] # Initialize reviews list
+        self._places = [] # Initialize places list (for places owned by user)
 
-        # Assign through setters to trigger validation
+        self.email = email
         self.first_name = first_name
         self.last_name = last_name
-        self.email = email
-        self.is_admin = is_admin
 
-    @property
-    def first_name(self):
-        return self._first_name
-
-    @first_name.setter
-    def first_name(self, value):
-        if not value:
-            raise ValueError("First name is required.")
-        if not isinstance(value, str):
-            raise TypeError("First name must be a string.")
-        if len(value) > 50:
-            raise ValueError("First name cannot exceed 50 characters.")
-        self._first_name = value
-        self.save() # Update timestamp
-
-    @property
-    def last_name(self):
-        return self._last_name
-
-    @last_name.setter
-    def last_name(self, value):
-        if not value:
-            raise ValueError("Last name is required.")
-        if not isinstance(value, str):
-            raise TypeError("Last name must be a string.")
-        if len(value) > 50:
-            raise ValueError("Last name cannot exceed 50 characters.")
-        self._last_name = value
-        self.save() # Update timestamp
+    # --- Properties with Getters and Setters for Validation ---
 
     @property
     def email(self):
@@ -51,56 +26,76 @@ class User(BaseModel):
 
     @email.setter
     def email(self, value):
-        if not value:
-            raise ValueError("Email is required.")
-        if not isinstance(value, str):
-            raise TypeError("Email must be a string.")
-        # Basic email format validation using regex
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", value):
+        if not isinstance(value, str) or "@" not in value or "." not in value:
             raise ValueError("Invalid email format.")
-        # NOTE: Uniqueness check will be done by the repository/facade,
-        # as the model itself doesn't have access to all stored users.
         self._email = value
-        self.save() # Update timestamp
 
     @property
-    def is_admin(self):
-        return self._is_admin
+    def first_name(self):
+        return self._first_name
 
-    @is_admin.setter
-    def is_admin(self, value):
-        if not isinstance(value, bool):
-            raise TypeError("is_admin must be a boolean.")
-        self._is_admin = value
-        self.save() # Update timestamp
+    @first_name.setter
+    def first_name(self, value):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("First name cannot be empty.")
+        self._first_name = value.strip()
+
+    @property
+    def last_name(self):
+        return self._last_name
+
+    @last_name.setter
+    def last_name(self, value):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("Last name cannot be empty.")
+        self._last_name = value.strip()
+
+    @property
+    def reviews(self):
+        return list(self._reviews) # Return a copy
+
+    def add_review(self, review): # ADDED for reviews
+        if not isinstance(review, Review):
+            raise TypeError("Cannot add non-Review object to user's reviews.")
+        if review not in self._reviews:
+            self._reviews.append(review)
+
+    def remove_review(self, review_id): # ADDED for reviews
+        """Removes a review from the user's collection by its ID."""
+        self._reviews = [r for r in self._reviews if r.id != review_id]
+
+    @property
+    def places(self):
+        return list(self._places) # Return a copy
+
+    def add_place(self, place): # Added for places owned by the user
+        if not isinstance(place, Place):
+            raise TypeError("Cannot add non-Place object to user's places.")
+        if place not in self._places:
+            self._places.append(place)
+
+    def remove_place(self, place_id):
+        self._places = [p for p in self._places if p.id != place_id]
+
+    # --- Update and to_dict Methods ---
+
+    def update(self, data):
+        """Updates User attributes, using setters for validation."""
+        if 'email' in data:
+            self.email = data['email']
+        if 'first_name' in data:
+            self.first_name = data['first_name']
+        if 'last_name' in data:
+            self.last_name = data['last_name']
+        self.updated_at = datetime.now()
 
     def to_dict(self):
         """Returns a dictionary representation of the User instance."""
         return {
             "id": self.id,
+            "email": self.email,
             "first_name": self.first_name,
             "last_name": self.last_name,
-            "email": self.email,
-            "is_admin": self.is_admin,
             "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat(),
+            "updated_at": self.updated_at.isoformat()
         }
-
-    def __repr__(self):
-        return f"User(id='{self.id}', email='{self.email}')"
-
-    def update(self, data):
-        """
-        Updates the user attributes based on the provided dictionary.
-        This overrides BaseModel's update to use setters for validation.
-        """
-        super_keys = ['id', 'created_at', 'updated_at']
-        for key, value in data.items():
-            if key in super_keys:
-                continue # Don't allow direct update of these BaseModel attributes
-
-            if hasattr(self, key):
-                setattr(self, key, value) # Use the property setters for validation
-            else:
-                print(f"Warning: Attempted to update non-existent attribute '{key}' for User.")
-        self.save() # Update the updated_at timestamp
