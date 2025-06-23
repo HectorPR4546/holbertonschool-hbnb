@@ -35,8 +35,6 @@ class HBnBFacade:
         if user:
             # The User model's update method handles validation and timestamping
             user.update(user_data)
-            # No need to add to repo again, as it's in-memory and updated in place
-            self.user_repo.save() # Call save on repository for consistency if needed, though in-memory update is direct
             return user
         return None # Return None if user not found
     # --- END NEW METHOD ---
