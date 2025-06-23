@@ -3,7 +3,16 @@ from datetime import datetime
 
 class Review:
     def __init__(self, text, rating, user_id, place_id, id=None):
-        self.id = id if id else str(uuid4())
+        if not text:
+            raise ValueError("Review text cannot be empty")
+        if not user_id:
+            raise ValueError("User ID is required")
+        if not place_id:
+            raise ValueError("Place ID is required")
+        if not (1 <= rating <= 5):
+            raise ValueError("Rating must be between 1 and 5")
+
+        self.id = id or str(uuid4())
         self.text = text
         self.rating = rating
         self.user_id = user_id
@@ -13,11 +22,9 @@ class Review:
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'text': self.text,
-            'rating': self.rating,
-            'user_id': self.user_id,
-            'place_id': self.place_id,
-            'created_at': self.created_at.isoformat(),
-            'updated_at': self.updated_at.isoformat()
+            "id": self.id,
+            "text": self.text,
+            "rating": self.rating,
+            "user_id": self.user_id,
+            "place_id": self.place_id
         }

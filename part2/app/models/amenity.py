@@ -3,6 +3,8 @@ from datetime import datetime
 
 class Amenity:
     def __init__(self, name, id=None):
+        if not name:
+            raise ValueError("Amenity name cannot be empty")
         self.id = id or str(uuid4())
         self.name = name
         self.created_at = datetime.utcnow()
