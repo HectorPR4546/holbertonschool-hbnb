@@ -1,16 +1,21 @@
-from app.models.base import BaseModel
+import uuid
+from datetime import datetime
 
-class Review(BaseModel):
-    """Review model with text, rating, and references to place and user."""
-    def __init__(self, text, rating, place, user):
-        super().__init__()
-
-        if not text:
-            raise ValueError("text is required")
-        if not (1 <= rating <= 5):
-            raise ValueError("rating must be between 1 and 5")
-
+class Review:
+    def __init__(self, text, rating, user_id, place_id, id=None):
+        self.id = id or str(uuid.uuid4())
         self.text = text
         self.rating = rating
-        self.place = place  # Must be a Place instance
-        self.user = user    # Must be a User instance
+        self.user_id = user_id
+        self.place_id = place_id
+        self.created_at = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "text": self.text,
+            "rating": self.rating,
+            "user_id": self.user_id,
+            "place_id": self.place_id
+        }
