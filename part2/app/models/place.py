@@ -24,6 +24,37 @@ class Place(BaseModel):
         self._reviews = []  # List to store related Review objects
         self._amenities = [] # List to store related Amenity objects
 
+
+    def to_dict(self, include_relationships=False):
+        """
+        Returns a dictionary representation of the Place instance.
+        If include_relationships is True, includes nested owner and amenities details.
+        """
+        data = {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "price": self.price,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "owner_id": self.owner.id, # Always include owner_id
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+            # Reviews are not detailed here yet, just showing their IDs for completeness.
+            # They will be nested fully in a later task.
+            "reviews": [review.id for review in self.reviews] # List of review IDs
+        }
+
+        if include_relationships:
+            # Include full owner object if requested
+            if self.owner:
+                data["owner"] = self.owner.to_dict() # Recursively call to_dict on owner
+
+            # Include full amenities list if requested
+            data["amenities"] = [amenity.to_dict() for amenity in self.amenities] # Recursively call to_dict on amenities
+
+        return data
+
     @property
     def title(self):
         return self._title
