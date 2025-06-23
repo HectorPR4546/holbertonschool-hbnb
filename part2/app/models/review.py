@@ -1,9 +1,11 @@
 # part2/app/models/review.py
 
 from app.models.base_model import BaseModel
-from app.models.user import User  # Import User for type checking
-from app.models.place import Place  # Import Place for type checking
 from datetime import datetime
+
+# Use direct module import to break circular dependency
+import app.models.user  # Import the user module
+import app.models.place # Import the place module
 
 class Review(BaseModel):
     def __init__(self, text, rating, user, place, **kwargs):
@@ -50,7 +52,8 @@ class Review(BaseModel):
 
     @user.setter
     def user(self, value):
-        if not isinstance(value, User):
+        # Refer to User using its module prefix
+        if not isinstance(value, app.models.user.User):
             raise TypeError("Review user must be an instance of User.")
         self._user = value
 
@@ -60,7 +63,8 @@ class Review(BaseModel):
 
     @place.setter
     def place(self, value):
-        if not isinstance(value, Place):
+        # Refer to Place using its module prefix
+        if not isinstance(value, app.models.place.Place):
             raise TypeError("Review place must be an instance of Place.")
         self._place = value
 

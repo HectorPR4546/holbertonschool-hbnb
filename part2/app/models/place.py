@@ -1,11 +1,13 @@
 # part2/app/models/place.py
 
 from app.models.base_model import BaseModel
-from app.models.user import User # Import User for type checking owner
-from app.models.amenity import Amenity # Import Amenity for type checking amenities
-from app.models.review import Review # IMPORT for review type checking
 import uuid
 from datetime import datetime
+
+# Use direct module imports to break potential circular dependencies
+import app.models.user    # Import user module
+import app.models.amenity # Import amenity module
+import app.models.review  # Import review module
 
 class Place(BaseModel):
     def __init__(self, title, description, price, latitude, longitude, owner, **kwargs):
@@ -96,7 +98,8 @@ class Place(BaseModel):
 
     @owner.setter
     def owner(self, value):
-        if not isinstance(value, User):
+        # Refer to User using its module prefix
+        if not isinstance(value, app.models.user.User):
             raise TypeError("Owner must be an instance of User.")
         self._owner = value
 
@@ -105,7 +108,8 @@ class Place(BaseModel):
         return list(self._amenities) # Return a copy to prevent external modification
 
     def add_amenity(self, amenity):
-        if not isinstance(amenity, Amenity):
+        # Refer to Amenity using its module prefix
+        if not isinstance(amenity, app.models.amenity.Amenity):
             raise TypeError(f"Cannot add non-Amenity object: {type(amenity)}")
         if amenity not in self._amenities:
             self._amenities.append(amenity)
@@ -117,13 +121,14 @@ class Place(BaseModel):
     def reviews(self):
         return list(self._reviews) # Return a copy
 
-    def add_review(self, review): # ADDED/CONFIRMED for reviews
-        if not isinstance(review, Review):
+    def add_review(self, review):
+        # Refer to Review using its module prefix
+        if not isinstance(review, app.models.review.Review):
             raise TypeError("Cannot add non-Review object to reviews.")
         if review not in self._reviews:
             self._reviews.append(review)
 
-    def remove_review(self, review_id): # ADDED for reviews
+    def remove_review(self, review_id):
         """Removes a review from the place's collection by its ID."""
         self._reviews = [r for r in self._reviews if r.id != review_id]
 
@@ -159,7 +164,9 @@ class Place(BaseModel):
             "owner_id": self.owner.id if self.owner else None, # Safely access owner.id
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
-            "reviews": [review.id for review in self.reviews] # List of review IDs by default
+            # Reviews are usually nested, but their IDs might be shown here in a flat list
+            # by default, if include_relationships is False.
+            "reviews": [review.id for review in self.reviews]
         }
 
         if include_relationships:

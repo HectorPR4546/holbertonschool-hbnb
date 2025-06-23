@@ -1,9 +1,11 @@
 # part2/app/models/user.py
 
 from app.models.base_model import BaseModel
-from app.models.review import Review # IMPORT for review type checking
-from app.models.place import Place # IMPORT for place type checking
 from datetime import datetime
+
+# Use direct module import to break circular dependency
+import app.models.review  # Import the review module
+import app.models.place   # Import the place module
 
 class User(BaseModel):
     def __init__(self, email, first_name, last_name, **kwargs):
@@ -54,13 +56,14 @@ class User(BaseModel):
     def reviews(self):
         return list(self._reviews) # Return a copy
 
-    def add_review(self, review): # ADDED for reviews
-        if not isinstance(review, Review):
+    def add_review(self, review):
+        # Refer to Review using its module prefix
+        if not isinstance(review, app.models.review.Review):
             raise TypeError("Cannot add non-Review object to user's reviews.")
         if review not in self._reviews:
             self._reviews.append(review)
 
-    def remove_review(self, review_id): # ADDED for reviews
+    def remove_review(self, review_id):
         """Removes a review from the user's collection by its ID."""
         self._reviews = [r for r in self._reviews if r.id != review_id]
 
@@ -68,8 +71,9 @@ class User(BaseModel):
     def places(self):
         return list(self._places) # Return a copy
 
-    def add_place(self, place): # Added for places owned by the user
-        if not isinstance(place, Place):
+    def add_place(self, place):
+        # Refer to Place using its module prefix
+        if not isinstance(place, app.models.place.Place):
             raise TypeError("Cannot add non-Place object to user's places.")
         if place not in self._places:
             self._places.append(place)
