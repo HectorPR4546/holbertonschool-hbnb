@@ -7,7 +7,7 @@ class User:
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        self.password = password  # Store hashed in real app
+        self.password = password
         self.created_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
 
@@ -17,7 +17,6 @@ class User:
             'first_name': self.first_name,
             'last_name': self.last_name,
             'email': self.email,
-            # Do not return password in dict for security
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }
