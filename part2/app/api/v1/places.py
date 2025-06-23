@@ -1,10 +1,10 @@
-# api/v1/places.py
 from flask_restx import Namespace, Resource, fields
 from flask import request
 from app.services import facade
 
 api = Namespace('places', description='Place operations')
 
+# Models for related entities
 amenity_model = api.model('PlaceAmenity', {
     'id': fields.String(description='Amenity ID'),
     'name': fields.String(description='Name of the amenity')
@@ -24,7 +24,9 @@ review_model = api.model('PlaceReview', {
     'user_id': fields.String(description='ID of the user')
 })
 
+# Main Place model
 place_model = api.model('Place', {
+    'id': fields.String(readOnly=True, description='Place ID'),
     'title': fields.String(required=True, description='Title of the place'),
     'description': fields.String(description='Description of the place'),
     'price': fields.Float(required=True, description='Price per night'),
@@ -36,70 +38,45 @@ place_model = api.model('Place', {
     'reviews': fields.List(fields.Nested(review_model), description='List of reviews')
 })
 
+
 @api.route('/')
 class PlaceList(Resource):
+    @api.marshal_list_with(place_model)
+    def get(self):
+        """Retrieve a list of all places"""
+        return facade.get_all_places()
+
     @api.expect(place_model)
-    @api.response(201, 'Place successfully created')
+    @api.marshal_with(place_model, code=201)
     @api.response(400, 'Invalid input data')
     def post(self):
         """Register a new place"""
-        # You may implement or keep your existing logic here
-        pass
+        try:
+            place_data = request.json
+            return facade.create_place(place_data), 201
+        except ValueError as e:
+            api.abort(400, str(e))
 
-    @api.response(200, 'List of places retrieved successfully')
-    def get(self):
-        """Retrieve a list of all places"""
-        # You may implement or keep your existing logic here
-        pass
 
 @api.route('/<string:place_id>')
+@api.param('place_id', 'Place ID')
+@api.response(404, 'Place not found')
 class PlaceResource(Resource):
-    @api.response(200, 'Place details retrieved successfully')
-    @api.response(404, 'Place not found')
+    @api.marshal_with(place_model)
     def get(self, place_id):
         """Get place details by ID"""
-        place = facade.get_place(place_id)
-        if not place:
-            return {'message': 'Place not found'}, 404
-
-        owner = facade.get_user(place.owner_id)
-        amenities = facade.get_amenities_by_place(place_id) if hasattr(facade, 'get_amenities_by_place') else []
-        reviews = facade.get_reviews_by_place(place_id)
-
-        amenities_data = [{
-            'id': a.id,
-            'name': a.name
-        } for a in amenities]
-
-        reviews_data = [{
-            'id': r.id,
-            'text': r.text,
-            'rating': r.rating,
-            'user_id': r.user_id
-        } for r in reviews]
-
-        return {
-            'id': place.id,
-            'title': place.title,
-            'description': place.description,
-            'price': place.price,
-            'latitude': place.latitude,
-            'longitude': place.longitude,
-            'owner': {
-                'id': owner.id if owner else None,
-                'first_name': owner.first_name if owner else None,
-                'last_name': owner.last_name if owner else None,
-                'email': owner.email if owner else None
-            },
-            'amenities': amenities_data,
-            'reviews': reviews_data
-        }, 200
+        try:
+            return facade.get_place(place_id)
+        except ValueError as e:
+            api.abort(404, str(e))
 
     @api.expect(place_model)
     @api.response(200, 'Place updated successfully')
-    @api.response(404, 'Place not found')
     @api.response(400, 'Invalid input data')
     def put(self, place_id):
         """Update a place's information"""
-        # You may implement or keep your existing logic here
-        pass
+        try:
+            place_data = request.json
+            return facade.update_place(place_id, place_data)
+        except ValueError as e:
+            api.abort(400, str(e))

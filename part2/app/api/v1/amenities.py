@@ -1,63 +1,50 @@
 from flask_restx import Namespace, Resource, fields
+from flask import request
 from app.services import facade
 
 api = Namespace('amenities', description='Amenity operations')
 
 amenity_model = api.model('Amenity', {
+    'id': fields.String(readOnly=True, description='Amenity ID'),
     'name': fields.String(required=True, description='Name of the amenity')
 })
 
+
 @api.route('/')
 class AmenityList(Resource):
-    @api.expect(amenity_model)
-    @api.response(201, 'Amenity successfully created')
-    @api.response(400, 'Invalid input data')
-    def post(self):
-        """Register a new amenity"""
-        amenity_data = api.payload
-
-        # Check for missing or invalid data
-        if not amenity_data.get('name'):
-            return {'error': 'Name is required'}, 400
-
-        existing_amenity = facade.get_amenity_by_name(amenity_data['name'])
-        if existing_amenity:
-            return {'error': 'Amenity already exists'}, 400
-
-        new_amenity = facade.create_amenity(amenity_data)
-        return {'id': new_amenity.id, 'name': new_amenity.name}, 201
-
-    @api.response(200, 'List of amenities retrieved successfully')
+    @api.marshal_list_with(amenity_model)
     def get(self):
-        """Retrieve a list of all amenities"""
-        amenities = facade.get_all_amenities()
-        result = [{'id': a.id, 'name': a.name} for a in amenities]
-        return result, 200
-
-@api.route('/<amenity_id>')
-class AmenityResource(Resource):
-    @api.response(200, 'Amenity details retrieved successfully')
-    @api.response(404, 'Amenity not found')
-    def get(self, amenity_id):
-        """Get amenity details by ID"""
-        amenity = facade.get_amenity(amenity_id)
-        if not amenity:
-            return {'error': 'Amenity not found'}, 404
-        return {'id': amenity.id, 'name': amenity.name}, 200
+        """Get a list of all amenities"""
+        return facade.get_all_amenities()
 
     @api.expect(amenity_model)
-    @api.response(200, 'Amenity updated successfully')
-    @api.response(404, 'Amenity not found')
-    @api.response(400, 'Invalid input data')
+    @api.marshal_with(amenity_model, code=201)
+    def post(self):
+        """Create a new amenity"""
+        try:
+            amenity_data = request.json
+            return facade.create_amenity(amenity_data), 201
+        except ValueError as e:
+            api.abort(400, str(e))
+
+
+@api.route('/<string:amenity_id>')
+@api.param('amenity_id', 'Amenity ID')
+@api.response(404, 'Amenity not found')
+class AmenityResource(Resource):
+    @api.marshal_with(amenity_model)
+    def get(self, amenity_id):
+        """Get an amenity by ID"""
+        try:
+            return facade.get_amenity(amenity_id)
+        except ValueError as e:
+            api.abort(404, str(e))
+
+    @api.expect(amenity_model)
     def put(self, amenity_id):
-        """Update an amenity's information"""
-        amenity_data = api.payload
-        if not amenity_data.get('name'):
-            return {'error': 'Name is required'}, 400
-
-        amenity = facade.get_amenity(amenity_id)
-        if not amenity:
-            return {'error': 'Amenity not found'}, 404
-
-        facade.update_amenity(amenity_id, amenity_data)
-        return {'message': 'Amenity updated successfully'}, 200
+        """Update an amenity"""
+        try:
+            amenity_data = request.json
+            return facade.update_amenity(amenity_id, amenity_data)
+        except ValueError as e:
+            api.abort(400, str(e))
