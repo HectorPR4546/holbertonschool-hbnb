@@ -1,18 +1,23 @@
-from app.models.base import BaseModel
+from uuid import uuid4
+from datetime import datetime
 
-class User(BaseModel):
-    """User model with basic info and admin flag."""
-    def __init__(self, first_name, last_name, email, is_admin=False):
-        super().__init__()
-
-        if not first_name or len(first_name) > 50:
-            raise ValueError("first_name is required and must be under 50 characters")
-        if not last_name or len(last_name) > 50:
-            raise ValueError("last_name is required and must be under 50 characters")
-        if not email or "@" not in email:
-            raise ValueError("A valid email is required")
-
+class User:
+    def __init__(self, first_name, last_name, email, password, id=None):
+        self.id = id if id else str(uuid4())
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        self.is_admin = is_admin
+        self.password = password  # Store hashed in real app
+        self.created_at = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'email': self.email,
+            # Do not return password in dict for security
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
+        }

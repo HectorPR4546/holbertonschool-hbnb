@@ -1,9 +1,17 @@
-from app.models.base import BaseModel
+from uuid import uuid4
+from datetime import datetime
 
-class Amenity(BaseModel):
-    """Amenity model with a name."""
-    def __init__(self, name):
-        super().__init__()
-        if not name or len(name) > 50:
-            raise ValueError("name is required and must be under 50 characters")
+class Amenity:
+    def __init__(self, name, id=None):
+        self.id = id if id else str(uuid4())
         self.name = name
+        self.created_at = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
+        }
