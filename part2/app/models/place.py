@@ -1,184 +1,111 @@
 # part2/app/models/place.py
-
-from app.models.base_model import BaseModel
-import uuid
 from datetime import datetime
+import uuid
 
-# Use direct module imports to break potential circular dependencies
-import app.models.user    # Import user module
-import app.models.amenity # Import amenity module
-import app.models.review  # Import review module
+class Place:
+    def __init__(self, title, description, latitude, longitude, price_per_night,
+                 number_of_rooms, number_of_bathrooms, max_guests, owner_id,
+                 city_id, amenities=None): # amenities is a list of amenity IDs
 
-class Place(BaseModel):
-    def __init__(self, title, description, price, latitude, longitude, owner, **kwargs):
-        super().__init__(**kwargs)
-        # Initialize internal attributes to None or empty lists
-        self._title = None
-        self._description = None
-        self._price = None
-        self._latitude = None
-        self._longitude = None
-        self._owner = None
-        self._amenities = [] # Initialize as empty list
-        self._reviews = [] # Initialize as empty list
+        # Validation for required fields and types/ranges
+        if not title or not isinstance(title, str) or title.strip() == "":
+            raise ValueError("Title cannot be empty.")
+        if not (isinstance(latitude, (int, float)) and -90 <= latitude <= 90):
+            raise ValueError("Latitude must be between -90 and 90.")
+        if not (isinstance(longitude, (int, float)) and -180 <= longitude <= 180):
+            raise ValueError("Longitude must be between -180 and 180.")
+        if not (isinstance(price_per_night, (int, float)) and price_per_night >= 0):
+            raise ValueError("Price per night must be a non-negative number.")
+        if not (isinstance(number_of_rooms, int) and number_of_rooms >= 0):
+            raise ValueError("Number of rooms must be a non-negative integer.")
+        if not (isinstance(number_of_bathrooms, int) and number_of_bathrooms >= 0):
+            raise ValueError("Number of bathrooms must be a non-negative integer.")
+        if not (isinstance(max_guests, int) and max_guests >= 1):
+            raise ValueError("Max guests must be a positive integer.")
+        if not owner_id: # Validity of owner_id itself checked by facade
+            raise ValueError("Owner ID cannot be empty.")
+        if not city_id: # Validity of city_id itself checked by facade
+            raise ValueError("City ID cannot be empty.")
 
-        # Assign values using setters to trigger validation
-        self.title = title
-        self.description = description
-        self.price = price
+
+        self.id = str(uuid.uuid4())
+        self.title = title.strip()
+        self.description = description.strip() if description else ""
         self.latitude = latitude
         self.longitude = longitude
-        self.owner = owner # This will call the owner setter
-
-    # --- Properties with Getters and Setters for Validation ---
-
-    @property
-    def title(self):
-        return self._title
-
-    @title.setter
-    def title(self, value):
-        # Validation: Not empty
-        if not isinstance(value, str) or not value.strip():
-            raise ValueError("Title cannot be empty.")
-        self._title = value.strip()
-
-    @property
-    def description(self):
-        return self._description
-
-    @description.setter
-    def description(self, value):
-        # Description can be None or an empty string, but if present, must be string
-        if value is not None:
-            if not isinstance(value, str):
-                raise TypeError("Description must be a string or None.")
-            self._description = value.strip() if value.strip() else None
-        else:
-            self._description = None
-
-    @property
-    def price(self):
-        return self._price
-
-    @price.setter
-    def price(self, value):
-        if not isinstance(value, (int, float)):
-            raise TypeError("Price must be a number.")
-        if value < 0: # Ensures positive or zero
-            raise ValueError("Price must be a non-negative number.")
-        self._price = float(value)
-
-    @property
-    def latitude(self):
-        return self._latitude
-
-    @latitude.setter
-    def latitude(self, value):
-        if not isinstance(value, (int, float)):
-            raise TypeError("Latitude must be a number.")
-        if not (-90 <= value <= 90):
-            raise ValueError("Latitude must be between -90 and 90.")
-        self._latitude = float(value)
-
-    @property
-    def longitude(self):
-        return self._longitude
-
-    @longitude.setter
-    def longitude(self, value):
-        if not isinstance(value, (int, float)):
-            raise TypeError("Longitude must be a number.")
-        if not (-180 <= value <= 180):
-            raise ValueError("Longitude must be between -180 and 180.")
-        self._longitude = float(value)
-
-    @property
-    def owner(self):
-        return self._owner
-
-    @owner.setter
-    def owner(self, value):
-        # Refer to User using its module prefix
-        if not isinstance(value, app.models.user.User):
-            raise TypeError("Owner must be an instance of User.")
-        self._owner = value
-
-    @property
-    def amenities(self):
-        return list(self._amenities) # Return a copy to prevent external modification
-
-    def add_amenity(self, amenity):
-        # Refer to Amenity using its module prefix
-        if not isinstance(amenity, app.models.amenity.Amenity):
-            raise TypeError(f"Cannot add non-Amenity object: {type(amenity)}")
-        if amenity not in self._amenities:
-            self._amenities.append(amenity)
-
-    def remove_amenity(self, amenity_id):
-        self._amenities = [a for a in self._amenities if a.id != amenity_id]
-
-    @property
-    def reviews(self):
-        return list(self._reviews) # Return a copy
-
-    def add_review(self, review):
-        # Refer to Review using its module prefix
-        if not isinstance(review, app.models.review.Review):
-            raise TypeError("Cannot add non-Review object to reviews.")
-        if review not in self._reviews:
-            self._reviews.append(review)
-
-    def remove_review(self, review_id):
-        """Removes a review from the place's collection by its ID."""
-        self._reviews = [r for r in self._reviews if r.id != review_id]
-
-    # --- Update and to_dict Methods ---
-
-    def update(self, data):
-        """Updates Place attributes, using setters for validation."""
-        if 'title' in data:
-            self.title = data['title']
-        if 'description' in data:
-            self.description = data['description']
-        if 'price' in data:
-            self.price = data['price']
-        if 'latitude' in data:
-            self.latitude = data['latitude']
-        if 'longitude' in data:
-            self.longitude = data['longitude']
+        self.price_per_night = price_per_night
+        self.number_of_rooms = number_of_rooms
+        self.number_of_bathrooms = number_of_bathrooms
+        self.max_guests = max_guests
+        self.owner_id = owner_id
+        self.city_id = city_id
+        self.amenities = list(amenities) if amenities is not None else [] # Store amenity IDs as a list
+        self.created_at = datetime.now()
         self.updated_at = datetime.now()
 
-    def to_dict(self, include_relationships=False):
-        """
-        Returns a dictionary representation of the Place instance.
-        If include_relationships is True, includes nested owner, amenities, and reviews details.
-        """
-        data = {
-            "id": self.id,
-            "title": self.title,
-            "description": self.description,
-            "price": self.price,
-            "latitude": self.latitude,
-            "longitude": self.longitude,
-            "owner_id": self.owner.id if self.owner else None, # Safely access owner.id
-            "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat(),
-            "reviews": [review.id for review in self.reviews] # Default to showing review IDs
+    def update(self, data):
+        # Update logic with validation
+        if 'title' in data:
+            if not data['title'] or not isinstance(data['title'], str) or data['title'].strip() == "":
+                raise ValueError("Title cannot be empty.")
+            self.title = data['title'].strip()
+        if 'description' in data:
+            self.description = data['description'].strip() if data['description'] else ""
+        if 'latitude' in data:
+            if not (isinstance(data['latitude'], (int, float)) and -90 <= data['latitude'] <= 90):
+                raise ValueError("Latitude must be between -90 and 90.")
+            self.latitude = data['latitude']
+        if 'longitude' in data:
+            if not (isinstance(data['longitude'], (int, float)) and -180 <= data['longitude'] <= 180):
+                raise ValueError("Longitude must be between -180 and 180.")
+            self.longitude = data['longitude']
+        if 'price_per_night' in data:
+            if not (isinstance(data['price_per_night'], (int, float)) and data['price_per_night'] >= 0):
+                raise ValueError("Price per night must be a non-negative number.")
+            self.price_per_night = data['price_per_night']
+        if 'number_of_rooms' in data:
+            if not (isinstance(data['number_of_rooms'], int) and data['number_of_rooms'] >= 0):
+                raise ValueError("Number of rooms must be a non-negative integer.")
+            self.number_of_rooms = data['number_of_rooms']
+        if 'number_of_bathrooms' in data:
+            if not (isinstance(data['number_of_bathrooms'], int) and data['number_of_bathrooms'] >= 0):
+                raise ValueError("Number of bathrooms must be a non-negative integer.")
+            self.number_of_bathrooms = data['number_of_bathrooms']
+        if 'max_guests' in data:
+            if not (isinstance(data['max_guests'], int) and data['max_guests'] >= 1):
+                raise ValueError("Max guests must be a positive integer.")
+            self.max_guests = data['max_guests']
+        if 'owner_id' in data:
+            if not data['owner_id']:
+                raise ValueError("Owner ID cannot be empty.")
+            self.owner_id = data['owner_id']
+        if 'city_id' in data:
+            if not data['city_id']:
+                raise ValueError("City ID cannot be empty.")
+            self.city_id = data['city_id']
+        if 'amenities' in data:
+            if not isinstance(data['amenities'], list):
+                raise ValueError("Amenities must be a list of IDs.")
+            # You might want to validate if amenity IDs exist in amenity_repo here,
+            # but for now, just assign the list.
+            self.amenities = list(data['amenities'])
+
+        self.updated_at = datetime.now()
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'price_per_night': self.price_per_night,
+            'number_of_rooms': self.number_of_rooms,
+            'number_of_bathrooms': self.number_of_bathrooms,
+            'max_guests': self.max_guests,
+            'owner_id': self.owner_id,
+            'city_id': self.city_id,
+            'amenities': self.amenities, # List of amenity IDs
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
         }
-
-        if include_relationships:
-            # Include full owner object if requested
-            if self.owner:
-                data["owner"] = self.owner.to_dict()
-            else:
-                data["owner"] = None
-
-            # Include full amenities list if requested
-            data["amenities"] = [amenity.to_dict() for amenity in self.amenities]
-
-            # Include full reviews list if requested, using their nested dict format
-            data["reviews"] = [review.to_nested_dict() for review in self.reviews]
-
-
-        return data

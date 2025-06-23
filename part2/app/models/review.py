@@ -1,105 +1,46 @@
 # part2/app/models/review.py
-
-from app.models.base_model import BaseModel
 from datetime import datetime
+import uuid
 
-# Use direct module import to break circular dependency
-import app.models.user  # Import the user module
-import app.models.place # Import the place module
-
-class Review(BaseModel):
-    def __init__(self, text, rating, user, place, **kwargs):
-        super().__init__(**kwargs)
-        # Initialize internal attributes
-        self._text = None
-        self._rating = None
-        self._user = None
-        self._place = None
-
-        # Assign values using setters to trigger validation
-        self.text = text
-        self.rating = rating
-        self.user = user
-        self.place = place
-
-    # --- Properties with Getters and Setters for Validation ---
-
-    @property
-    def text(self):
-        return self._text
-
-    @text.setter
-    def text(self, value):
-        # Validation: Not empty
-        if not isinstance(value, str) or not value.strip():
+class Review:
+    def __init__(self, user_id, place_id, rating, text):
+        # Validation for required fields and ranges
+        if not user_id: # Validity checked by facade
+            raise ValueError("User ID cannot be empty.")
+        if not place_id: # Validity checked by facade
+            raise ValueError("Place ID cannot be empty.")
+        if not (isinstance(rating, int) and 1 <= rating <= 5):
+            raise ValueError("Rating must be an integer between 1 and 5.")
+        if not text or not isinstance(text, str) or text.strip() == "":
             raise ValueError("Review text cannot be empty.")
-        self._text = value.strip()
 
-    @property
-    def rating(self):
-        return self._rating
-
-    @rating.setter
-    def rating(self, value):
-        # Validation: Integer between 1 and 5
-        if not isinstance(value, int):
-            raise TypeError("Rating must be an integer.")
-        if not (1 <= value <= 5):
-            raise ValueError("Rating must be between 1 and 5.")
-        self._rating = value
-
-    @property
-    def user(self):
-        return self._user
-
-    @user.setter
-    def user(self, value):
-        # Refer to User using its module prefix
-        if not isinstance(value, app.models.user.User):
-            raise TypeError("Review user must be an instance of User.")
-        self._user = value
-
-    @property
-    def place(self):
-        return self._place
-
-    @place.setter
-    def place(self, value):
-        # Refer to Place using its module prefix
-        if not isinstance(value, app.models.place.Place):
-            raise TypeError("Review place must be an instance of Place.")
-        self._place = value
-
-    # --- Update and to_dict Methods ---
+        self.id = str(uuid.uuid4())
+        self.user_id = user_id
+        self.place_id = place_id
+        self.rating = rating
+        self.text = text.strip()
+        self.created_at = datetime.now()
+        self.updated_at = datetime.now()
 
     def update(self, data):
-        """Updates Review attributes, using setters for validation."""
-        if 'text' in data:
-            self.text = data['text']
         if 'rating' in data:
+            if not (isinstance(data['rating'], int) and 1 <= data['rating'] <= 5):
+                raise ValueError("Rating must be an integer between 1 and 5.")
             self.rating = data['rating']
-        # user and place relationships are not updated via this method
+        if 'text' in data:
+            if not data['text'] or not isinstance(data['text'], str) or data['text'].strip() == "":
+                raise ValueError("Review text cannot be empty.")
+            self.text = data['text'].strip()
+
         self.updated_at = datetime.now()
 
     def to_dict(self):
-        """
-        Returns a dictionary representation of the Review instance.
-        Relationships (user and place) are represented by their IDs only.
-        """
         return {
-            "id": self.id,
-            "text": self.text,
-            "rating": self.rating,
-            "user_id": self.user.id if self.user else None,
-            "place_id": self.place.id if self.place else None,
-            "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat()
-        }
-
-    def to_nested_dict(self):
-        """Returns a simplified dictionary for nested review display (e.g., within a Place)."""
-        return {
-            "id": self.id,
-            "text": self.text,
-            "rating": self.rating
+            'id': self.id,
+            'user_id': self.user_id,
+            'place_id': self.place_id,
+            'rating': self.rating,
+            'text': self.text,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
         }
