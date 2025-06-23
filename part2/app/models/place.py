@@ -2,7 +2,8 @@ from uuid import uuid4
 from datetime import datetime
 
 class Place:
-    def __init__(self, title, description, price, latitude, longitude, owner_id, amenities=None, id=None):
+    def __init__(self, title, price, latitude, longitude, owner_id,
+                 description="", amenities=None, id=None, created_at=None, updated_at=None):
         if not title:
             raise ValueError("Title cannot be empty")
         if price <= 0:
@@ -20,8 +21,8 @@ class Place:
         self.longitude = longitude
         self.owner_id = owner_id
         self.amenities = amenities or []
-        self.created_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
+        self.created_at = created_at or datetime.utcnow()
+        self.updated_at = updated_at or datetime.utcnow()
 
     def to_dict(self):
         return {
