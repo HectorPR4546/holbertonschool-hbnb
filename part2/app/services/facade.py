@@ -1,15 +1,17 @@
+# part2/app/services/facade.py
+
 from app.persistence.repository import InMemoryRepository
 from app.models.user import User
-from app.models.place import Place # Make sure Place is imported!
+from app.models.place import Place
 from app.models.review import Review
-from app.models.amenity import Amenity # Make sure Amenity is imported!
-from datetime import datetime # Ensure datetime is imported if BaseModel uses it directly
+from app.models.amenity import Amenity
+from datetime import datetime
 
 class HBnBFacade:
     def __init__(self):
         self.user_repo = InMemoryRepository()
         self.place_repo = InMemoryRepository()
-        self.review_repo = InMemoryRepository()
+        self.review_repo = InMemoryRepository() # Not used yet, but initialized
         self.amenity_repo = InMemoryRepository()
 
     # --- User Methods ---
@@ -53,61 +55,51 @@ class HBnBFacade:
             return amenity
         return None
 
-    # --- Place Methods (NEW) ---
+    # --- Place Methods ---
     def create_place(self, place_data):
         """
         Creates a new place instance.
         Expects owner_id and a list of amenity_ids in place_data.
+        Raises ValueError for business logic errors (e.g., owner not found).
         """
-        print(f"DEBUG: Facade.create_place received data: {place_data}") # DEBUG 1
         owner_id = place_data.pop('owner_id', None)
-        amenity_ids = place_data.pop('amenities', [])
+        amenity_ids = place_data.pop('amenities', []) # 'amenities' will be a list of IDs
 
         if not owner_id:
             raise ValueError("Owner ID is required to create a place.")
 
         owner = self.user_repo.get(owner_id)
         if not owner:
-            raise ValueError(f"Owner with ID {owner_id} not found.")
-        print(f"DEBUG: Found owner: {owner.id}") # DEBUG 2
+            raise ValueError(f"Owner with ID '{owner_id}' not found.")
 
-        # Important: Ensure Place.py's __init__ can handle missing description
-        # or ensure description is always present in place_data
+        # Ensure all required place attributes are passed, even if None for optional ones
+        # The Place model's __init__ and setters will validate their types and values
         place_creation_data = {
             'title': place_data.get('title'),
-            'description': place_data.get('description'), # .get() returns None if not present
+            'description': place_data.get('description'),
             'price': place_data.get('price'),
             'latitude': place_data.get('latitude'),
             'longitude': place_data.get('longitude'),
-            'owner': owner
+            'owner': owner # Pass the actual User object
         }
-        print(f"DEBUG: Place creation dict for Place(**kwargs): {place_creation_data}") # DEBUG 3
-
-        try:
-            place = Place(**place_creation_data)
-            print(f"DEBUG: Place object successfully instantiated: {place.id}, Title: {place.title}") # DEBUG 4
-        except Exception as e:
-            print(f"ERROR: Exception during Place instantiation: {e}") # DEBUG 5
-            # Re-raise to let the API endpoint catch it
-            raise
+        
+        place = Place(**place_creation_data) # This will call setters and can raise Value/TypeErrors
 
         # Add amenities to the place object
-        print(f"DEBUG: Processing amenities for place {place.id}. IDs: {amenity_ids}") # DEBUG 6
         for amenity_id in amenity_ids:
             amenity = self.amenity_repo.get(amenity_id)
             if not amenity:
-                print(f"WARNING: Amenity with ID {amenity_id} not found. Skipping.")
+                print(f"Warning: Amenity with ID '{amenity_id}' not found. Skipping.")
+                # Depending on requirements, you might want to raise an error here
                 continue
-            place.add_amenity(amenity)
-            print(f"DEBUG: Added amenity {amenity.name} to place.") # DEBUG 7
+            place.add_amenity(amenity) # add_amenity in Place class handles duplicates
 
         self.place_repo.add(place)
-        print(f"DEBUG: Place {place.id} added to repository. Returning place object.") # DEBUG 8
         return place
 
     def get_place(self, place_id):
         """Retrieves a place by its ID."""
-        return self.place_repo.get(place_id) # Returns the Place object, which has owner and amenities already linked
+        return self.place_repo.get(place_id)
 
     def get_all_places(self):
         """Retrieves all places from the repository."""
@@ -116,19 +108,20 @@ class HBnBFacade:
     def update_place(self, place_id, place_data):
         """
         Updates an existing place's information.
-        Handles updating owner_id and amenity_ids separately.
+        Handles updating owner and amenities relationships separately.
+        Raises ValueError for business logic errors (e.g., owner not found).
         """
         place = self.place_repo.get(place_id)
         if not place:
-            return None
+            return None # Indicate place not found
 
         # Handle owner_id update
         if 'owner_id' in place_data:
             new_owner_id = place_data.pop('owner_id')
-            if new_owner_id != place.owner.id: # Only update if changing
+            if new_owner_id != (place.owner.id if place.owner else None): # Only update if changing
                 new_owner = self.user_repo.get(new_owner_id)
                 if not new_owner:
-                    raise ValueError(f"New owner with ID {new_owner_id} not found.")
+                    raise ValueError(f"New owner with ID '{new_owner_id}' not found.")
                 place.owner = new_owner # Use the setter to update owner
 
         # Handle amenities update (replace existing ones with new list)
@@ -136,25 +129,24 @@ class HBnBFacade:
             new_amenity_ids = place_data.pop('amenities')
             
             # Clear existing amenities first
-            # NOTE: A more robust approach might compare and add/remove only changes
-            # but for simplicity, we'll clear and re-add for now.
-            # To clear, we need to iterate over a copy of the list.
+            # Iterate over a copy to avoid issues while modifying the list
             for existing_amenity in list(place.amenities):
                 place.remove_amenity(existing_amenity.id)
 
             for amenity_id in new_amenity_ids:
                 amenity = self.amenity_repo.get(amenity_id)
                 if not amenity:
-                    print(f"Warning: Amenity with ID {amenity_id} not found during update. Skipping.")
+                    print(f"Warning: Amenity with ID '{amenity_id}' not found during update. Skipping.")
                     continue
-                place.add_amenity(amenity) # add_amenity already prevents duplicates
+                place.add_amenity(amenity)
 
         # Update other attributes using the Place model's update method
         # This will call the setters for title, description, price, lat, long
-        try:
-            place.update(place_data)
-        except (ValueError, TypeError) as e:
-            # Re-raise or handle specific validation errors from the model
-            raise e # Let the API layer catch this and return 400
+        # Any ValueError/TypeError from setters will propagate
+        place.update(place_data)
 
         return place
+
+    # Placeholder method for fetching a review by ID (from previous task)
+    def get_review(self, review_id):
+        pass # To be implemented later
