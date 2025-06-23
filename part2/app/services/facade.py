@@ -1,6 +1,6 @@
 # part2/app/services/facade.py
 
-from app.persistence.repository import InMemoryRepository
+from app.persistence.in_memory_repository import InMemoryRepository
 from app.models.user import User
 from app.models.place import Place
 from app.models.review import Review
