@@ -8,7 +8,8 @@ user_model = api.model('User', {
     'id': fields.String(readOnly=True, description='The unique identifier'),
     'first_name': fields.String(required=True, description='First name'),
     'last_name': fields.String(required=True, description='Last name'),
-    'email': fields.String(required=True, description='Email address')
+    'email': fields.String(required=True, description='Email address'),
+    'password': fields.String(required=True, description='Password', write_only=True)
 })
 
 
@@ -22,12 +23,12 @@ class UserList(Resource):
 
     @api.doc('create_user')
     @api.expect(user_model)
-    @api.marshal_with(user_model, code=201)
     def post(self):
         """Create a new user"""
         try:
             user_data = request.json
-            return facade.create_user(user_data), 201
+            user = facade.create_user(user_data)
+            return {'id': user.id, 'message': 'User created successfully'}, 201
         except ValueError as e:
             api.abort(400, str(e))
 
@@ -54,3 +55,4 @@ class UserResource(Resource):
             return facade.update_user(user_id, user_data)
         except ValueError as e:
             api.abort(404, str(e))
+

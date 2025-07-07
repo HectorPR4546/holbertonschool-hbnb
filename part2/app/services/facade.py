@@ -17,7 +17,7 @@ class HBnBFacade:
     def create_user(self, user_data):
         user = User(**user_data)
         self.users[user.id] = user
-        return user.to_dict()
+        return user
 
     def get_user(self, user_id):
         user = self.users.get(user_id)
