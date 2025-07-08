@@ -2,7 +2,7 @@ from flask import Flask
 from flask_restx import Api
 
 # Import extensions
-from app.extensions import bcrypt, jwt
+from app.extensions import bcrypt, jwt, db
 
 # Import namespaces
 from app.api.v1.users import api as users_ns
@@ -18,6 +18,7 @@ def create_app(config_class="config.DevelopmentConfig"):
     # Initialize extensions
     bcrypt.init_app(app)
     jwt.init_app(app)
+    db.init_app(app)
     
     api = Api(
         app,

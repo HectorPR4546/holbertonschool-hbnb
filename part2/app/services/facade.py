@@ -4,11 +4,12 @@ from app.models.user import User
 from app.models.amenity import Amenity
 from app.models.place import Place
 from app.models.review import Review
+from app.persistence.repository import SQLAlchemyRepository
 
 
 class HBnBFacade:
     def __init__(self):
-        self.users = {}
+        self.user_repo = SQLAlchemyRepository(User)
         self.amenities = {}
         self.places = {}
         self.reviews = {}
@@ -16,34 +17,22 @@ class HBnBFacade:
     # User methods
     def create_user(self, user_data):
         user = User(**user_data)
-        self.users[user.id] = user
+        self.user_repo.add(user)
         return user
 
     def get_user(self, user_id):
-        user = self.users.get(user_id)
-        if not user:
-            raise ValueError("User not found")
-        return user.to_dict()
+        return self.user_repo.get(user_id)
 
     def get_all_users(self):
-        return [u.to_dict() for u in self.users.values()]
+        return self.user_repo.get_all()
 
     def update_user(self, user_id, update_data):
-        user = self.users.get(user_id)
-        if not user:
-            raise ValueError("User not found")
-        for key, value in update_data.items():
-            if hasattr(user, key):
-                setattr(user, key, value)
-        user.updated_at = datetime.utcnow()
+        self.user_repo.update(user_id, update_data)
         return {"message": "User updated successfully"}
 
     def get_user_by_email(self, email):
         """Retrieves a user by their email address."""
-        for user in self.users.values():
-            if user.email == email:
-                return user
-        return None
+        return self.user_repo.get_by_attribute('email', email)
 
     # Amenity methods
     def create_amenity(self, amenity_data):
