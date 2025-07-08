@@ -25,24 +25,10 @@ class ReviewList(Resource):
     @api.expect(review_model)
     @api.marshal_with(review_model, code=201)
     @api.response(400, 'Invalid input data')
-    @jwt_required()
     def post(self):
         """Register a new review"""
         try:
-            current_user = get_jwt_identity()
             review_data = request.json
-            review_data['user_id'] = current_user['id'] # Ensure user_id matches authenticated user
-
-            place = facade.get_place(review_data['place_id'])
-            if place['owner_id'] == current_user['id']:
-                api.abort(400, "You cannot review your own place.")
-
-            # Check if user has already reviewed this place
-            existing_reviews = facade.get_reviews_by_place(review_data['place_id'])
-            for review in existing_reviews:
-                if review['user_id'] == current_user['id']:
-                    api.abort(400, "You have already reviewed this place.")
-
             return facade.create_review(review_data), 201
         except ValueError as e:
             api.abort(400, str(e))

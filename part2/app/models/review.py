@@ -6,8 +6,8 @@ class Review(BaseModel):
 
     text = db.Column(db.String(500), nullable=False)
     rating = db.Column(db.Integer, nullable=False)
-    user_id = db.Column(db.String(36), nullable=False)
-    place_id = db.Column(db.String(36), nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    place_id = db.Column(db.String(36), db.ForeignKey('places.id'), nullable=False)
 
     def __init__(self, text, rating, user_id, place_id, id=None):
         super().__init__(id=id)
@@ -31,5 +31,7 @@ class Review(BaseModel):
             "text": self.text,
             "rating": self.rating,
             "user_id": self.user_id,
-            "place_id": self.place_id
+            "place_id": self.place_id,
+            "user": self.user.to_dict() if self.user else None,
+            "place": self.place.to_dict() if self.place else None
         }

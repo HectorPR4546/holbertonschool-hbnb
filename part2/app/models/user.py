@@ -11,6 +11,9 @@ class User(BaseModel):
     password = db.Column(db.String(128), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
 
+    places = db.relationship('Place', backref='owner', lazy=True)
+    reviews = db.relationship('Review', backref='user', lazy=True)
+
     def __init__(self, first_name, last_name, email, password, is_admin=False, id=None):
         super().__init__(id=id)
         if not first_name or not last_name:
@@ -41,5 +44,7 @@ class User(BaseModel):
             "first_name": self.first_name,
             "last_name": self.last_name,
             "email": self.email,
-            "is_admin": self.is_admin
+            "is_admin": self.is_admin,
+            "places": [place.to_dict() for place in self.places],
+            "reviews": [review.to_dict() for review in self.reviews]
         }

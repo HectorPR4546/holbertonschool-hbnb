@@ -56,10 +56,7 @@ class PlaceList(Resource):
     @api.marshal_list_with(place_output_model)
     def get(self):
         """Retrieve a list of all places"""
-        places = []
-        for place in facade.get_all_places():
-            places.append(facade.get_place(place['id']))
-        return places
+        return facade.get_all_places()
 
     @api.expect(place_input_model)
     @api.marshal_with(place_output_model, code=201)
