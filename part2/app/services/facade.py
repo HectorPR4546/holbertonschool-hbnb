@@ -1,15 +1,14 @@
-from uuid import uuid4
-from datetime import datetime
 from app.models.user import User
 from app.models.amenity import Amenity
 from app.models.place import Place
 from app.models.review import Review
 from app.persistence.repository import SQLAlchemyRepository
+from app.services.repositories.user_repository import UserRepository
 
 
 class HBnBFacade:
     def __init__(self):
-        self.user_repo = SQLAlchemyRepository(User)
+        self.user_repo = UserRepository()
         self.amenities = {}
         self.places = {}
         self.reviews = {}
@@ -32,7 +31,7 @@ class HBnBFacade:
 
     def get_user_by_email(self, email):
         """Retrieves a user by their email address."""
-        return self.user_repo.get_by_attribute('email', email)
+        return self.user_repo.get_user_by_email(email)
 
     # Amenity methods
     def create_amenity(self, amenity_data):
@@ -61,7 +60,8 @@ class HBnBFacade:
     # Place methods
     def create_place(self, place_data):
         owner_id = place_data.get("owner_id")
-        if owner_id not in self.users:
+        # This check will need to be updated to use the user_repo
+        if not self.user_repo.get(owner_id):
             raise ValueError("Invalid owner_id")
         for amenity_id in place_data.get("amenities", []):
             if amenity_id not in self.amenities:
@@ -78,7 +78,7 @@ class HBnBFacade:
         place_dict = place.to_dict()
 
     # Add owner info
-        owner = self.users.get(place.owner_id)
+        owner = self.user_repo.get(place.owner_id)
         place_dict["owner"] = owner.to_dict() if owner else None
 
     # Add amenities info
@@ -113,9 +113,10 @@ class HBnBFacade:
     # Review methods
     def create_review(self, review_data):
         user_id = review_data.get("user_id")
-        place_id = review_data.get("place_id")
-        if user_id not in self.users:
+        # This check will need to be updated to use the user_repo
+        if not self.user_repo.get(user_id):
             raise ValueError("Invalid user_id")
+        place_id = review_data.get("place_id")
         if place_id not in self.places:
             raise ValueError("Invalid place_id")
         review = Review(**review_data)
