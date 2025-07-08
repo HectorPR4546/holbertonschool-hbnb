@@ -1,5 +1,6 @@
 from flask_restx import Namespace, Resource, fields
 from flask import request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.services import facade
 
 api = Namespace('users', description='User operations')
@@ -55,4 +56,5 @@ class UserResource(Resource):
             return facade.update_user(user_id, user_data)
         except ValueError as e:
             api.abort(404, str(e))
+
 

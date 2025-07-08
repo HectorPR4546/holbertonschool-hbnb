@@ -38,6 +38,13 @@ class HBnBFacade:
         user.updated_at = datetime.utcnow()
         return {"message": "User updated successfully"}
 
+    def get_user_by_email(self, email):
+        """Retrieves a user by their email address."""
+        for user in self.users.values():
+            if user.email == email:
+                return user
+        return None
+
     # Amenity methods
     def create_amenity(self, amenity_data):
         amenity = Amenity(**amenity_data)

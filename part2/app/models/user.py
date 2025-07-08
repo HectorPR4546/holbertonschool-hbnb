@@ -4,7 +4,7 @@ from datetime import datetime
 from app.extensions import bcrypt
 
 class User:
-    def __init__(self, first_name, last_name, email, password, id=None):
+    def __init__(self, first_name, last_name, email, password, is_admin=False, id=None):
         if not first_name or not last_name:
             raise ValueError("First name and last name cannot be empty")
         if not self._is_valid_email(email):
@@ -16,6 +16,7 @@ class User:
         self.email = email
         self.password = None
         self.hash_password(password)
+        self.is_admin = is_admin
         self.created_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
 
@@ -35,5 +36,6 @@ class User:
             "id": self.id,
             "first_name": self.first_name,
             "last_name": self.last_name,
-            "email": self.email
+            "email": self.email,
+            "is_admin": self.is_admin
         }
