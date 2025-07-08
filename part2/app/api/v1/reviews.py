@@ -68,8 +68,10 @@ class ReviewResource(Resource):
         """Update a review's information"""
         try:
             current_user = get_jwt_identity()
+            is_admin = current_user.get('is_admin', False)
+
             review = facade.get_review(review_id)
-            if review['user_id'] != current_user['id']:
+            if not is_admin and review['user_id'] != current_user['id']:
                 api.abort(403, "Unauthorized action: You can only update your own reviews")
             review_data = request.json
             return facade.update_review(review_id, review_data)
@@ -82,8 +84,10 @@ class ReviewResource(Resource):
         """Delete a review"""
         try:
             current_user = get_jwt_identity()
+            is_admin = current_user.get('is_admin', False)
+
             review = facade.get_review(review_id)
-            if review['user_id'] != current_user['id']:
+            if not is_admin and review['user_id'] != current_user['id']:
                 api.abort(403, "Unauthorized action: You can only delete your own reviews")
             return facade.delete_review(review_id)
         except ValueError as e:

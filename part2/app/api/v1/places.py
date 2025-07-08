@@ -69,8 +69,10 @@ class PlaceList(Resource):
         """Register a new place"""
         try:
             current_user = get_jwt_identity()
+            is_admin = current_user.get('is_admin', False)
+
             place_data = request.json
-            if place_data.get('owner_id') != current_user['id']:
+            if not is_admin and place_data.get('owner_id') != current_user['id']:
                 api.abort(403, "Unauthorized action: owner_id must match authenticated user")
             return facade.create_place(place_data), 201
         except ValueError as e:
@@ -97,8 +99,10 @@ class PlaceResource(Resource):
         """Update a place's information"""
         try:
             current_user = get_jwt_identity()
+            is_admin = current_user.get('is_admin', False)
+
             place = facade.get_place(place_id)
-            if place['owner_id'] != current_user['id']:
+            if not is_admin and place['owner_id'] != current_user['id']:
                 api.abort(403, "Unauthorized action: You can only update your own places")
             place_data = request.json
             return facade.update_place(place_id, place_data)

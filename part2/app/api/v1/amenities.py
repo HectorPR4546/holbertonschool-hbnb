@@ -1,5 +1,6 @@
 from flask_restx import Namespace, Resource, fields
 from flask import request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.services import facade
 
 api = Namespace('amenities', description='Amenity operations')
@@ -19,9 +20,13 @@ class AmenityList(Resource):
 
     @api.expect(amenity_model)
     @api.marshal_with(amenity_model, code=201)
+    @jwt_required()
     def post(self):
         """Create a new amenity"""
         try:
+            current_user = get_jwt_identity()
+            if not current_user.get('is_admin'):
+                api.abort(403, "Admin privileges required")
             amenity_data = request.json
             return facade.create_amenity(amenity_data), 201
         except ValueError as e:
@@ -41,9 +46,13 @@ class AmenityResource(Resource):
             api.abort(404, str(e))
 
     @api.expect(amenity_model)
+    @jwt_required()
     def put(self, amenity_id):
         """Update an amenity"""
         try:
+            current_user = get_jwt_identity()
+            if not current_user.get('is_admin'):
+                api.abort(403, "Admin privileges required")
             amenity_data = request.json
             return facade.update_amenity(amenity_id, amenity_data)
         except ValueError as e:
