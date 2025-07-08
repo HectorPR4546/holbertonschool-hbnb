@@ -49,10 +49,16 @@ class UserResource(Resource):
 
     @api.doc('update_user')
     @api.expect(user_model)
+    @jwt_required()
     def put(self, user_id):
         """Update a user's info"""
         try:
+            current_user = get_jwt_identity()
+            if user_id != current_user['id']:
+                api.abort(403, "Unauthorized action: You can only update your own user details")
             user_data = request.json
+            if 'email' in user_data or 'password' in user_data:
+                api.abort(400, "You cannot modify email or password.")
             return facade.update_user(user_id, user_data)
         except ValueError as e:
             api.abort(404, str(e))

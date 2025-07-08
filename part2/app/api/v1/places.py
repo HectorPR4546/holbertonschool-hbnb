@@ -1,5 +1,6 @@
 from flask_restx import Namespace, Resource, fields
 from flask import request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.services import facade
 
 api = Namespace('places', description='Place operations')
@@ -63,10 +64,14 @@ class PlaceList(Resource):
     @api.expect(place_input_model)
     @api.marshal_with(place_output_model, code=201)
     @api.response(400, 'Invalid input data')
+    @jwt_required()
     def post(self):
         """Register a new place"""
         try:
+            current_user = get_jwt_identity()
             place_data = request.json
+            if place_data.get('owner_id') != current_user['id']:
+                api.abort(403, "Unauthorized action: owner_id must match authenticated user")
             return facade.create_place(place_data), 201
         except ValueError as e:
             api.abort(400, str(e))
@@ -87,9 +92,14 @@ class PlaceResource(Resource):
     @api.expect(place_input_model)
     @api.response(200, 'Place updated successfully')
     @api.response(400, 'Invalid input data')
+    @jwt_required()
     def put(self, place_id):
         """Update a place's information"""
         try:
+            current_user = get_jwt_identity()
+            place = facade.get_place(place_id)
+            if place['owner_id'] != current_user['id']:
+                api.abort(403, "Unauthorized action: You can only update your own places")
             place_data = request.json
             return facade.update_place(place_id, place_data)
         except ValueError as e:

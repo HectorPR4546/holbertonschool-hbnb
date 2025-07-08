@@ -1,5 +1,6 @@
 from flask_restx import Namespace, Resource, fields
 from flask import request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.services import facade
 
 api = Namespace('reviews', description='Review operations')
@@ -24,10 +25,24 @@ class ReviewList(Resource):
     @api.expect(review_model)
     @api.marshal_with(review_model, code=201)
     @api.response(400, 'Invalid input data')
+    @jwt_required()
     def post(self):
         """Register a new review"""
         try:
+            current_user = get_jwt_identity()
             review_data = request.json
+            review_data['user_id'] = current_user['id'] # Ensure user_id matches authenticated user
+
+            place = facade.get_place(review_data['place_id'])
+            if place['owner_id'] == current_user['id']:
+                api.abort(400, "You cannot review your own place.")
+
+            # Check if user has already reviewed this place
+            existing_reviews = facade.get_reviews_by_place(review_data['place_id'])
+            for review in existing_reviews:
+                if review['user_id'] == current_user['id']:
+                    api.abort(400, "You have already reviewed this place.")
+
             return facade.create_review(review_data), 201
         except ValueError as e:
             api.abort(400, str(e))
@@ -48,18 +63,28 @@ class ReviewResource(Resource):
     @api.expect(review_model)
     @api.response(200, 'Review updated successfully')
     @api.response(400, 'Invalid input data')
+    @jwt_required()
     def put(self, review_id):
         """Update a review's information"""
         try:
+            current_user = get_jwt_identity()
+            review = facade.get_review(review_id)
+            if review['user_id'] != current_user['id']:
+                api.abort(403, "Unauthorized action: You can only update your own reviews")
             review_data = request.json
             return facade.update_review(review_id, review_data)
         except ValueError as e:
             api.abort(400, str(e))
 
     @api.response(200, 'Review deleted successfully')
+    @jwt_required()
     def delete(self, review_id):
         """Delete a review"""
         try:
+            current_user = get_jwt_identity()
+            review = facade.get_review(review_id)
+            if review['user_id'] != current_user['id']:
+                api.abort(403, "Unauthorized action: You can only delete your own reviews")
             return facade.delete_review(review_id)
         except ValueError as e:
             api.abort(404, str(e))
