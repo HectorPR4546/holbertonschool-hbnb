@@ -1,9 +1,19 @@
-from uuid import uuid4
-from datetime import datetime
+from app.extensions import db
+from .baseclass import BaseModel
 
-class Place:
+class Place(BaseModel):
+    __tablename__ = 'places'
+
+    title = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.String(500), nullable=True)
+    price = db.Column(db.Float, nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    owner_id = db.Column(db.String(36), nullable=False)
+
     def __init__(self, title, price, latitude, longitude, owner_id,
-                 description="", amenities=None, id=None, created_at=None, updated_at=None):
+                 description="", amenities=None, id=None):
+        super().__init__(id=id)
         # Cast numeric values to correct types before validating
         try:
             price = float(price)
@@ -21,7 +31,6 @@ class Place:
         if not (-180 <= longitude <= 180):
             raise ValueError("Longitude must be between -180 and 180")
 
-        self.id = id or str(uuid4())
         self.title = title
         self.description = description
         self.price = price
@@ -29,8 +38,6 @@ class Place:
         self.longitude = longitude
         self.owner_id = owner_id
         self.amenities = amenities or []
-        self.created_at = created_at or datetime.utcnow()
-        self.updated_at = updated_at or datetime.utcnow()
 
     def to_dict(self):
         return {
@@ -40,7 +47,5 @@ class Place:
             "price": self.price,
             "latitude": self.latitude,
             "longitude": self.longitude,
-            "owner_id": self.owner_id,
-            "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat()
+            "owner_id": self.owner_id
         }

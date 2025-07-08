@@ -1,8 +1,16 @@
-from uuid import uuid4
-from datetime import datetime
+from app.extensions import db
+from .baseclass import BaseModel
 
-class Review:
+class Review(BaseModel):
+    __tablename__ = 'reviews'
+
+    text = db.Column(db.String(500), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.String(36), nullable=False)
+    place_id = db.Column(db.String(36), nullable=False)
+
     def __init__(self, text, rating, user_id, place_id, id=None):
+        super().__init__(id=id)
         if not text:
             raise ValueError("Review text cannot be empty")
         if not user_id:
@@ -12,13 +20,10 @@ class Review:
         if not (1 <= rating <= 5):
             raise ValueError("Rating must be between 1 and 5")
 
-        self.id = id or str(uuid4())
         self.text = text
         self.rating = rating
         self.user_id = user_id
         self.place_id = place_id
-        self.created_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
 
     def to_dict(self):
         return {

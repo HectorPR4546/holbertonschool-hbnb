@@ -1,14 +1,16 @@
-from uuid import uuid4
-from datetime import datetime
+from app.extensions import db
+from .baseclass import BaseModel
 
-class Amenity:
+class Amenity(BaseModel):
+    __tablename__ = 'amenities'
+
+    name = db.Column(db.String(120), nullable=False, unique=True)
+
     def __init__(self, name, id=None):
+        super().__init__(id=id)
         if not name:
             raise ValueError("Amenity name cannot be empty")
-        self.id = id or str(uuid4())
         self.name = name
-        self.created_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
 
     def to_dict(self):
         return {
