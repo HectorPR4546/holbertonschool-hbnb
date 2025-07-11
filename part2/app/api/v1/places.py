@@ -106,6 +106,24 @@ class PlaceResource(Resource):
         except ValueError as e:
             api.abort(400, str(e))
 
+    @api.doc('delete_place')
+    @api.response(204, 'Place successfully deleted')
+    @jwt_required()
+    def delete(self, place_id):
+        """Delete a place"""
+        try:
+            current_user = get_jwt_identity()
+            is_admin = current_user.get('is_admin', False)
+
+            place = facade.get_place(place_id)
+            if not is_admin and place['owner_id'] != current_user['id']:
+                api.abort(403, "Unauthorized action: You can only delete your own places")
+
+            facade.delete_place(place_id)
+            return '', 204
+        except ValueError as e:
+            api.abort(404, str(e))
+
 @api.route('/<string:place_id>/reviews')
 @api.param('place_id', 'Place ID')
 @api.response(404, 'Place not found')
