@@ -83,4 +83,21 @@ class UserResource(Resource):
         except ValueError as e:
             api.abort(404, str(e))
 
+    @api.doc('delete_user')
+    @api.response(204, 'User successfully deleted')
+    @jwt_required()
+    def delete(self, user_id):
+        """Delete a user"""
+        try:
+            current_user = get_jwt_identity()
+            is_admin = current_user.get('is_admin', False)
+
+            if not is_admin and user_id != current_user['id']:
+                api.abort(403, "Unauthorized action: You can only delete your own user details")
+
+            facade.delete_user(user_id)
+            return '', 204
+        except ValueError as e:
+            api.abort(404, str(e))
+
 
