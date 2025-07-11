@@ -91,9 +91,9 @@ The system is structured into three primary layers:
 
 ---
 
-## Part 3: Enhanced Backend with Authentication and Database Integration
+## Part 2: Enhanced Backend with Authentication and Database Integration
 
-Part 3 focuses on enhancing the backend of the HBnB application by introducing user authentication, authorization, and database integration using SQLAlchemy and SQLite for development. It also prepares the application for MySQL in production environments.
+Part 2 focuses on enhancing the backend of the HBnB application by introducing user authentication, authorization, and database integration using SQLAlchemy and SQLite for development. It also prepares the application for MySQL in production environments.
 
 Key features implemented in this part include:
 
@@ -104,7 +104,7 @@ Key features implemented in this part include:
 - **SQL Scripts:** Generating database schema and populating initial data.
 - **Database Diagrams:** Visualizing the database structure using Mermaid.js.
 
-**Important Note:** All development and implementation for Part 3 were carried out within the `part2` directory. The `part3` directory serves as a final copy of the completed work for this section of the project.
+**Important Note:** All development and implementation for Part 2 were carried out within the `part2` directory. The `part3` directory serves as a final copy of the completed work for this section of the project.
 
 ## Author
 
