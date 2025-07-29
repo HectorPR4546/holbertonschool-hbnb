@@ -14,15 +14,28 @@ function getCookie(name) {
 function checkAuthentication() {
     const token = getCookie('token');
     const loginLink = document.getElementById('login-link');
+    const addReviewLink = document.getElementById('add-review-link'); // For place.html
 
     if (loginLink) {
         if (!token) {
             loginLink.style.display = 'block';
         } else {
             loginLink.style.display = 'none';
-            fetchPlaces(token);
+            // Only fetch places if on index.html
+            if (window.location.pathname.endsWith('index.html')) {
+                fetchPlaces(token);
+            }
         }
     }
+
+    if (addReviewLink) {
+        if (!token) {
+            addReviewLink.style.display = 'none';
+        } else {
+            addReviewLink.style.display = 'block';
+        }
+    }
+    return token; // Return token for use in other functions
 }
 
 async function fetchPlaces(token) {
@@ -68,7 +81,76 @@ function displayPlaces(placesToDisplay) {
             <button class="details-button" data-place-id="${place.id}">View Details</button>
         `;
         placesList.appendChild(placeCard);
+
+        // Add event listener for View Details button
+        placeCard.querySelector('.details-button').addEventListener('click', () => {
+            window.location.href = `place.html?id=${place.id}`;
+        });
     });
+}
+
+function getPlaceIdFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('id');
+}
+
+async function fetchPlaceDetails(token, placeId) {
+    try {
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        const response = await fetch(`http://localhost:5000/places/${placeId}`, {
+            method: 'GET',
+            headers: headers
+        });
+
+        if (response.ok) {
+            const place = await response.json();
+            displayPlaceDetails(place);
+        } else {
+            console.error('Failed to fetch place details:', response.statusText);
+            if (response.status === 401) {
+                window.location.href = 'login.html';
+            } else {
+                alert('Failed to load place details.');
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching place details:', error);
+        alert('An error occurred while loading place details.');
+    }
+}
+
+function displayPlaceDetails(place) {
+    const placeDetailsContent = document.getElementById('place-details-content');
+    if (!placeDetailsContent) return;
+
+    placeDetailsContent.innerHTML = `
+        <h1>${place.name}</h1>
+        <div class="place-info">
+            <p><strong>Host:</strong> ${place.host_name || 'N/A'}</p>
+            <p><strong>Price per night:</strong> $${place.price_per_night}</p>
+            <p><strong>Description:</strong> ${place.description || 'No description provided.'}</p>
+            <p><strong>Amenities:</strong> ${place.amenities && place.amenities.length > 0 ? place.amenities.join(', ') : 'None'}</p>
+        </div>
+
+        <h2>Reviews</h2>
+        <div class="reviews-list">
+            ${place.reviews && place.reviews.length > 0 ? place.reviews.map(review => `
+                <div class="review-card">
+                    <p><strong>Comment:</strong> ${review.comment}</p>
+                    <p><strong>User:</strong> ${review.user_name || 'Anonymous'}</p>
+                    <p><strong>Rating:</strong> ${review.rating}/5</p>
+                </div>
+            `).join('') : '<p>No reviews yet.</p>'}
+        </div>
+
+        <a href="add_review.html?place_id=${place.id}" class="add-review-button" id="add-review-link">Add Review</a>
+    `;
+
+    // Re-check authentication for the add review link after content is loaded
+    checkAuthentication();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -104,10 +186,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Check authentication and fetch places on page load
-    checkAuthentication();
+    // Check authentication and fetch data based on the current page
+    const token = checkAuthentication();
 
-    // Price filter logic
+    if (window.location.pathname.endsWith('index.html')) {
+        // fetchPlaces is called inside checkAuthentication for index.html
+    } else if (window.location.pathname.endsWith('place.html')) {
+        const placeId = getPlaceIdFromURL();
+        if (placeId) {
+            fetchPlaceDetails(token, placeId);
+        } else {
+            alert('Place ID not found in URL.');
+            window.location.href = 'index.html'; // Redirect if no ID
+        }
+    }
+
+    // Price filter logic (only for index.html)
     const priceFilter = document.getElementById('price-filter');
     if (priceFilter) {
         priceFilter.addEventListener('change', (event) => {
