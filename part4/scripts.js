@@ -153,6 +153,31 @@ function displayPlaceDetails(place) {
     checkAuthentication();
 }
 
+async function submitReview(token, placeId, rating, comment) {
+    try {
+        const response = await fetch(`http://localhost:5000/places/${placeId}/reviews`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ rating: parseInt(rating), comment: comment })
+        });
+
+        if (response.ok) {
+            alert('Review submitted successfully!');
+            // Optionally redirect or clear form
+            window.location.href = `place.html?id=${placeId}`;
+        } else {
+            const errorData = await response.json();
+            alert('Failed to submit review: ' + (errorData.message || response.statusText));
+        }
+    } catch (error) {
+        console.error('Error submitting review:', error);
+        alert('An error occurred while submitting the review. Please try again.');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Login form submission logic (from previous task)
     const loginForm = document.getElementById('login-form');
@@ -199,21 +224,30 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Place ID not found in URL.');
             window.location.href = 'index.html'; // Redirect if no ID
         }
-    }
+    } else if (window.location.pathname.endsWith('add_review.html')) {
+        const reviewForm = document.getElementById('add-review-form');
+        const placeId = getPlaceIdFromURL();
 
-    // Price filter logic (only for index.html)
-    const priceFilter = document.getElementById('price-filter');
-    if (priceFilter) {
-        priceFilter.addEventListener('change', (event) => {
-            const maxPrice = event.target.value;
-            const filteredPlaces = allPlaces.filter(place => {
-                if (maxPrice === 'all') {
-                    return true;
-                } else {
-                    return place.price_per_night <= parseFloat(maxPrice);
-                }
+        if (!token) {
+            window.location.href = 'index.html'; // Redirect if not authenticated
+            return;
+        }
+
+        if (!placeId) {
+            alert('Place ID not found for review.');
+            window.location.href = 'index.html';
+            return;
+        }
+
+        if (reviewForm) {
+            reviewForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const rating = document.getElementById('rating').value;
+                const comment = document.getElementById('comment').value;
+
+                await submitReview(token, placeId, rating, comment);
             });
-            displayPlaces(filteredPlaces);
-        });
+        }
     }
 });
