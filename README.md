@@ -35,30 +35,6 @@ The HBnB Evolution platform will support the following features:
 
 ---
 
-## Business Entities and Rules
-
-### User
-- **Attributes:** `first_name`, `last_name`, `email`, `password`, `is_admin`
-- **Actions:** register, update, delete
-
-### Place
-- **Attributes:** `title`, `description`, `price`, `latitude`, `longitude`
-- **Relationships:** belongs to a user (owner), has many amenities
-- **Actions:** create, update, delete, list
-
-### Review
-- **Attributes:** `rating`, `comment`
-- **Relationships:** belongs to a user and a place
-- **Actions:** create, update, delete, list by place
-
-### Amenity
-- **Attributes:** `name`, `description`
-- **Actions:** create, update, delete, list
-
-> All entities will include a unique `id`, `created_at`, and `updated_at` fields for auditing.
-
----
-
 ## Architectural Overview
 
 The system is structured into three primary layers:
@@ -105,6 +81,17 @@ Key features implemented in this part include:
 - **Database Diagrams:** Visualizing the database structure using Mermaid.js.
 
 **Important Note:** All development and implementation for Part 2 were carried out within the `part2` directory. The `part3` directory serves as a final copy of the completed work for this section of the project.
+
+## Part 4: Simple Web Client
+
+Part 4 focuses on the front-end development of the HBnB application, creating an interactive user interface that connects with the backend services. This part utilizes HTML5, CSS3, and JavaScript ES6 to build a dynamic web application.
+
+Key features implemented in this part include:
+
+- **User-Friendly Interface:** Designed and implemented pages for Login, List of Places, Place Details, and Add Review.
+- **Client-Side Functionality:** Implemented interactions with the backend API using Fetch API.
+- **Session Management:** Handled JWT token storage in cookies for user sessions.
+- **Dynamic Content:** Populated and filtered data dynamically without page reloads.
 
 ## Author
 

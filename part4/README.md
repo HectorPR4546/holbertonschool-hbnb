@@ -15,7 +15,7 @@ This directory contains the front-end web client for the HBnB project, developed
 - **Login:** Implemented user authentication with JWT token storage in cookies and redirection upon successful login.
 - **List of Places:** Displays a list of places fetched from the API with client-side filtering by price.
 - **Place Details:** Shows detailed information for a selected place, including amenities and reviews.
-- **Add Review:** Provides a form for authenticated users to submit reviews for places.
+- **Add Review:** Provides a form for authenticated users to submit reviews for places, with real-time update of reviews on the place details page.
 
 ## How to Run
 
