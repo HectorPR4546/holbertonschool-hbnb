@@ -1,3 +1,4 @@
+import logging
 from app.models.user import User
 from app.models.amenity import Amenity
 from app.models.place import Place
@@ -8,12 +9,15 @@ from app.services.repositories.amenity_repository import AmenityRepository
 from app.services.repositories.place_repository import PlaceRepository
 from app.services.repositories.review_repository import ReviewRepository
 
+# Configure logging
+logging.basicConfig(filename='api_debug.log', level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 class HBnBFacade:
     def __init__(self):
         self.user_repo = UserRepository()
         self.amenity_repo = AmenityRepository()
-        self.place_repo = PlaceRepository()
+        self.place_repo = Place_Repository()
         self.review_repo = ReviewRepository()
 
     # User methods
@@ -77,7 +81,10 @@ class HBnBFacade:
         return place
 
     def get_place(self, place_id):
-        return self.place_repo.get(place_id)
+        logging.debug(f"Facade: Attempting to get place with ID: {place_id}")
+        place = self.place_repo.get(place_id)
+        logging.debug(f"Facade: Result from repo: {place}")
+        return place
 
     def get_all_places(self):
         return self.place_repo.get_all()

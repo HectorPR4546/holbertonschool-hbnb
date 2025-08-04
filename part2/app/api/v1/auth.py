@@ -29,3 +29,7 @@ class Login(Resource):
         
         # Step 4: Return the JWT token to the client
         return {'access_token': access_token}, 200
+
+    def options(self):
+        """Handle CORS preflight requests"""
+        return '', 200

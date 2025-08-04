@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_restx import Api
+from flask_cors import CORS
 
 # Import extensions
 from app.extensions import bcrypt, jwt, db
@@ -14,20 +15,24 @@ from app.api.v1.auth import api as auth_ns
 def create_app(config_class="config.DevelopmentConfig"):
     app = Flask(__name__)
     app.config.from_object(config_class)
-    
-    # Initialize extensions
-    bcrypt.init_app(app)
-    jwt.init_app(app)
-    db.init_app(app)
+
+    # Enable CORS for the entire app with explicit settings
+    CORS(app, resources={r"/api/v1/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"], "allow_headers": ["Authorization", "Content-Type"], "supports_credentials": True}})
     
     api = Api(
         app,
         version='1.0',
         title='HBnB API',
         description='HBnB Application API',
-        doc='/api/v1/'  # Swagger UI at /api/v1/
+        doc='/api/v1/',
+        strict_slashes=False  # Disable strict slashes for API routes
     )
 
+    # Initialize extensions
+    bcrypt.init_app(app)
+    jwt.init_app(app)
+    db.init_app(app)
+    
     # Register all namespaces
     api.add_namespace(users_ns, path='/api/v1/users')
     api.add_namespace(amenities_ns, path='/api/v1/amenities')

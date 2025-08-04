@@ -38,7 +38,7 @@ place_input_model = api.model('PlaceInput', {
 
 # Model for output (GET)
 place_output_model = api.model('Place', {
-    'id': fields.String(readOnly=True, description='Place ID'),
+    'id': fields.Integer(readOnly=True, description='Place ID'),
     'title': fields.String(description='Title of the place'),
     'description': fields.String(description='Description of the place'),
     'price': fields.Float(description='Price per night'),
@@ -76,7 +76,7 @@ class PlaceList(Resource):
             api.abort(400, str(e))
 
 
-@api.route('/<string:place_id>')
+@api.route('/<int:place_id>')
 @api.param('place_id', 'Place ID')
 @api.response(404, 'Place not found')
 class PlaceResource(Resource):
@@ -124,7 +124,7 @@ class PlaceResource(Resource):
         except ValueError as e:
             api.abort(404, str(e))
 
-@api.route('/<string:place_id>/reviews')
+@api.route('/<int:place_id>/reviews')
 @api.param('place_id', 'Place ID')
 @api.response(404, 'Place not found')
 class PlaceReviewList(Resource):

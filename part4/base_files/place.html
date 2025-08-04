@@ -3,27 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Place Details</title>
+    <title>Place Details - HBnB</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="images/icon.png">
 </head>
 <body>
+    <header>
+        <div class="logo">
+            <img src="images/logo.png" alt="HBnB Logo">
+        </div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="login.html" class="login-button">Login</a>
+        </nav>
+    </header>
     <main>
-        <section id="place-details">
-            <!-- Place details will be populated dynamically -->
+        <section class="place-details">
+            <h2>Place Details</h2>
+            <!-- Place details will be dynamically added here -->
         </section>
-        <section id="reviews">
-            <!-- Reviews will be populated dynamically -->
+        <section class="reviews">
+            <h2>Reviews</h2>
+            <div class="review-card-container">
+                <!-- Review cards will be dynamically added here -->
+            </div>
         </section>
-        <section id="add-review">
+        <section class="add-review">
             <h2>Add a Review</h2>
-            <form id="review-form">
-                <label for="review-text">Review:</label>
-                <textarea id="review-text" name="review-text" required></textarea>
-                
-                <button type="submit">Submit</button>
-            </form>
+            <!-- Add review form will be dynamically added here -->
         </section>
     </main>
+    <footer>
+        <p>&copy; 2025 HBnB. All rights reserved.</p>
+    </footer>
     <script src="scripts.js"></script>
 </body>
 </html>
